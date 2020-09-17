@@ -1,7 +1,0 @@
-README.md
-setup.py
-gym_spades.egg-info/PKG-INFO
-gym_spades.egg-info/SOURCES.txt
-gym_spades.egg-info/dependency_links.txt
-gym_spades.egg-info/requires.txt
-gym_spades.egg-info/top_level.txt
