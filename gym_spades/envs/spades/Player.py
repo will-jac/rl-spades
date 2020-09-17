@@ -9,26 +9,30 @@ class player:
     def set_hand(self, hand):
         self.hand = hand
 
+    # default action: a random player
     def play(self, state):
         return self.play_randomly[0]
 
     def play_randomly(self):
-        cards = self.get_legal_actions()
+        cards = self.get_legal_cards()
         card = random.choice(cards)
-        #card = self.play(round)
         self.hand.remove(card)
         return card
 
-    def get_legal_actions(self):
-        if self.game.num_played == 0:
+    def get_legal_cards(self, round):
+        # if it's our lead, we can do anything
+        if len(round) == 0:
             return self.hand
-        start_suit = cards.suit(self.game.round[0])
+        # must follow lead if we can
+        start_suit = cards.suit(self.round[0])
         legal_cards = []
         for card in self.hand:
             if cards.suit(card) == start_suit:
                 legal_cards.append(card)
+        # if we can't follow suit, we can do anything
         if len(legal_cards) == 0:
             return self.hand
+        
         return legal_cards
 
     def game_end(self, trick_taken, points):
