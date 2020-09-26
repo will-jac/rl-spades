@@ -1,12 +1,12 @@
 import random
 
-from gym_spades.envs.spades.player import player
-from gym_spades.envs.spades.spades import cards, spades
+from gym_spades.envs.spades import cards, spades
+from gym_spades.envs.agents import fa_agent
 
 # q-learning player with function approximation
 # qfa
 
-class qfa(player):
+class qfa(fa_agent):
         
     def _play(self, state, round):
         return random.choice(self.get_legal_cards())

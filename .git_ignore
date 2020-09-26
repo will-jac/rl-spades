@@ -1,1 +1,3 @@
 gym_spades.egg-info/*
+build/*
+.tool-versions

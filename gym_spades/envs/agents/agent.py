@@ -1,5 +1,6 @@
 from gym_spades.envs.spades.player import player
-from gym_spades.envs.spades.spades import cards, spades
+from gym_spades.envs.spades.spades import spades
+from gym_spades.envs.spades.cards import cards
 from gym import error, spaces, utils
 
 # 'normal' tabular based agent
@@ -37,7 +38,7 @@ class agent(player):
             spaces.MultiBinary(3*4),
             # num_suit_lead_in_round
             spaces.MultiBinary(3*4*4),
-            
+
             # not sure how to implement these...
             #'player_may_be_out_of_suit'
             spaces.MultiBinary(3*4),

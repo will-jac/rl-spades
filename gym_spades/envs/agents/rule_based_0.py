@@ -1,7 +1,7 @@
 import random
 
 from gym_spades.envs.spades.player import player
-from gym_spades.envs.spades.spades import cards, spades
+from gym_spades.envs.spades import cards, spades
 
 # example player - a human!
 

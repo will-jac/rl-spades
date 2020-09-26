@@ -1,56 +1,5 @@
 import random
 
-from gym_spades.envs.spades.player import player
-
-class cards:
-    TWO = 0
-    THREE = 1
-    FOUR = 2
-    FIVE = 3
-    SIX = 4
-    SEVEN = 5
-    EIGHT = 6
-    NINE = 7
-    TEN = 8
-    JACK = 9
-    QUEEN = 10
-    KING = 11
-    ACE = 12
-    RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
-    # spades, hearts, clubs, diamonds 
-    SPADES = 0
-    HEARTS = 1
-    CLUBS = 3
-    DIAMONDS = 4
-    
-    SUITS = [SPADES, HEARTS, CLUBS, DIAMONDS]
-    
-    SUIT_STRING = ['♠', '♥', '♦', '♣']
-
-    NOCARD = 52
-
-    @staticmethod
-    def create_deck():
-        deck = [i for i in range(52)]
-        random.shuffle(deck)
-        return deck
-
-    @staticmethod
-    def rank(card):
-        return card % 13
-
-    @staticmethod
-    def suit(card):
-        return card // 13
-
-    @staticmethod
-    def card_str(card):
-        return RANKS[rank(card)] + SUIT_STRING[suit(card)]
-
-    @staticmethod
-    def create_card(rank, suit):
-        return rank + (suit * 13)
-
 class spades:
     BID = 0
     PLAY = 1
@@ -68,6 +17,8 @@ class spades:
 
     # reset the game to pay again
     def reset(self, shuffle_players = False):
+        from gym_spades.envs.spades.cards import cards
+        from gym_spades.envs.spades.player import player
 
         # keep track of the number of tricks taken
         self.tricks = [0] * 4
@@ -78,7 +29,7 @@ class spades:
         self.discard_by_suit = [[] for i in range(4)]
 
         # cards played in round
-        self.round = []
+        self.round_so_far = []
         # number of players that have played
         self.num_played = 0
 
@@ -94,18 +45,20 @@ class spades:
             random.shuffle(players)
 
         for i in range(4):
-            self.players[i].set_hand(self.deck[i*13 : (i+1)*13])
             self.players[i].set_index(i)
+            self.players[i].set_hand(self.deck[i*13 : (i+1)*13])
 
         self.starting_player = 0
 
-        self.mode = BID
+        self.mode = spades.BID
 
         # some other tracking stuff
         self.player_played_off_in_suit = [[0]*4 for i in range(4)]
         self.num_suit_lead_in_round = [0]*4
 
     def print(self):
+        from gym_spades.envs.spades.cards import cards
+        
         for i in range(4):
             print('Player ' + str(i) + ':')
             cards = ''
@@ -117,6 +70,8 @@ class spades:
         return (p + 1) % 4
 
     def bid_round(self):
+        from gym_spades.envs.spades.player import player
+
         assert self.mode == spades.BID
         
         self.bids = []
@@ -125,13 +80,21 @@ class spades:
             self.bids.append(self.players[i].bid(self.bids))
         t1 = self.bids[0] + self.bids[2]
         t2 = self.bids[1] + self.bids[3]
-        self.is_over_bid
+        if (t1 + t2) > 13:
+            self.is_over_bid = True
+        else:
+            self.is_over_bid = False
+        
+        self.mode = spades.PLAY
 
     # play a round of spades, eg one trick
     def play_round(self):
+        from gym_spades.envs.spades.cards import cards
+        from gym_spades.envs.spades.player import player
+
         assert self.round_counter < 13 and self.mode == spades.PLAY
 
-        self.round = []
+        self.round_so_far = []
 
         self.suit_lead = spades.NO_LEAD 
         self.spades_played = False
@@ -143,15 +106,15 @@ class spades:
         self.winning_rank = cards.ACE
 
         for i in range(4):
-            state = self.get_state(self.players[p])
-            c = self.players[p].play(state)
-            self.round.append(c)
+            state = self.players[p].get_state(self)
+            c = self.players[p].play(state, self.round_so_far, self.spades_broken)
+            self.round_so_far.append(c)
 
             s = cards.suit(c) 
             r = cards.rank(c)
-            self.discard_by_suit[r].append(c)
-            self.discard_by_suit[r].sort()
-            p = self.next_player(p)
+            print("played:", c, s)
+            self.discard_by_suit[s].append(c)
+            self.discard_by_suit[s].sort()
 
             # determine which card is winning
             # and do other tracking stuff
@@ -161,6 +124,8 @@ class spades:
                 self.winning_suit = s
                 self.winning_rank = r
                 self.num_suit_lead_in_round[s] += 1
+                if s == cards.SPADES:
+                    self.spades_broken = True
             else:
                 if s != self.suit_lead:
                     self.player_played_off_in_suit[p][self.suit_lead] = 1
@@ -176,11 +141,13 @@ class spades:
                     self.winning_suit = s
                     self.winning_rank = r
 
+            p = self._next_player(p)
+
         self.starting_player = self.winning
         
         # store the round info
         self.tricks[winning] += 1
-        self.round_history.append(self.round)
+        self.round_history.append(self.round_so_far)
         self.round_counter += 1
 
         # return the (index of the) player that took the round
@@ -191,10 +158,13 @@ class spades:
 
     def _build_state(self, player):
         # a --really-- simplistic state
-        return [self.round, player.hand]
+        return [self.round_so_far, player.hand]
 
     def have_highest_card_in_lead_suit(self, player):
-        if len(self.round) == 0:
+        from gym_spades.envs.spades.cards import cards
+        from gym_spades.envs.spades.player import player
+
+        if len(self.round_so_far) == 0:
             # it's our lead
             # do we have the highest card in any suit?
             for s in range(4):
@@ -222,6 +192,9 @@ class spades:
                 return False
 
     def can_win(self, player, have_highest):
+        from gym_spades.envs.spades.cards import cards
+        from gym_spades.envs.spades.player import player
+
         if self.suit_lead == spades.NO_LEAD:
             return True
 
@@ -230,7 +203,7 @@ class spades:
         for c in player.hand:
             if cards.suit(c) == self.suit_lead:
                 can_play_spades = False
-                if cards.rank(c) > cards.rank(self.round[0]):
+                if cards.rank(c) > cards.rank(self.round_so_far[0]):
                     return True
             elif cards.suit(c) == cards.SPADES:
                 if self.spades_played:
@@ -243,6 +216,9 @@ class spades:
             return can_win_spades
 
     def smallest_suit(self, player):
+        from gym_spades.envs.spades.cards import cards
+        from gym_spades.envs.spades.player import player
+
         suits_in_hand = [0]*4
         for c in player.hand:
             suits_in_hand[cards.suit(c)] += 1
@@ -255,9 +231,12 @@ class spades:
         return suit
         
 if __name__ == "__main__":
-    players = [0]*4
-    for i in range(4):
-        players[i] = player()
+    from gym_spades.envs.spades import spades
+    from gym_spades.envs.agents import human
+    from gym_spades.envs.agents import fa_agent
 
-    g = spades(players)
-    g.print()
+    players = [fa_agent(), human(), human(), human()]
+    game = spades(players)
+    game.bid_round()
+    print(game.bids)
+    game.play_round()

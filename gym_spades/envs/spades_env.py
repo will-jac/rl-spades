@@ -2,7 +2,8 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 
-from gym_spades.envs.spades.spades import spades, cards
+from gym_spades.envs.spades.spades import spades
+from gym_spades.envs.spades.cards import cards
 from gym_spades.envs.spades.player import player
 
 class SpadesEnv(gym.Env, spades):
@@ -138,4 +139,3 @@ class SpadesEnv(gym.Env, spades):
 
         )
 
-spades = SpadesEnv()

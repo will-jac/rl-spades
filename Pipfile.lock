@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2abc281be1973194c5bac4f5deba343ae55ea48e8a6ee0ace718bd230c6211dc"
+            "sha256": "906dca2952d392a1a3cb683d8e603abb358b6f6728878848dbfb1ee57d7e1953"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -27,14 +27,14 @@
             "hashes": [
                 "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.18.2"
         },
         "gym": {
             "hashes": [
                 "sha256:bb495aa56995b01274a2213423bf5ba05b8f4fd51c6dc61e9d4abddd1189718e"
             ],
-            "markers": "python_version >= '3.5'",
+            "index": "pypi",
             "version": "==0.17.2"
         },
         "gym-spades": {

@@ -2,9 +2,9 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 
-from .spades_game import spades, player
+from .spades import spades, player, cards
 
-class SpadesEnv(gym.Env):
+class SpadesRandomEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
   def __init__(self):
