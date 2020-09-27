@@ -48,3 +48,7 @@ class cards:
     @staticmethod
     def create_card(rank, suit):
         return rank + (suit * 13)
+
+    @staticmethod
+    def print_hand(hand):
+        print([cards.card_str(c) for c in hand])

@@ -78,9 +78,15 @@ class spades:
 
         for i in range(4):
             self.bids.append(self.players[i].bid(self.bids))
-        t1 = self.bids[0] + self.bids[2]
-        t2 = self.bids[1] + self.bids[3]
-        if (t1 + t2) > 13:
+        t0 = self.bids[0] + self.bids[2]
+        t1 = self.bids[1] + self.bids[3]
+
+        self.players[0].team_bid = t0
+        self.players[1].team_bid = t1
+        self.players[2].team_bid = t0
+        self.players[3].team_bid = t1
+
+        if (t0 + t1) > 13:
             self.is_over_bid = True
         else:
             self.is_over_bid = False
@@ -106,13 +112,12 @@ class spades:
         self.winning_rank = cards.ACE
 
         for i in range(4):
-            state = self.players[p].get_state(self)
-            c = self.players[p].play(state, self.round_so_far, self.spades_broken)
+            c = self.players[p].play(self)
             self.round_so_far.append(c)
 
             s = cards.suit(c) 
             r = cards.rank(c)
-            print("played:", c, s)
+            print("played:", cards.card_str(c))
             self.discard_by_suit[s].append(c)
             self.discard_by_suit[s].sort()
 
@@ -146,12 +151,15 @@ class spades:
         self.starting_player = self.winning
         
         # store the round info
-        self.tricks[winning] += 1
+        self.tricks[self.winning] += 1
         self.round_history.append(self.round_so_far)
         self.round_counter += 1
 
+        # send info to players
+        self.players[self.winning].team_tricks += 1
+        self.players[(self.winning + 2) % 4].team_tricks += 1
         # return the (index of the) player that took the round
-        return winning
+        return self.winning
 
     def game_over(self):
         return self.round_counter == 13
@@ -232,10 +240,11 @@ class spades:
         
 if __name__ == "__main__":
     from gym_spades.envs.spades import spades
+    from gym_spades.envs.spades import player
     from gym_spades.envs.agents import human
     from gym_spades.envs.agents import fa_agent
 
-    players = [fa_agent(), human(), human(), human()]
+    players = [fa_agent(), fa_agent(), fa_agent(), fa_agent()]
     game = spades(players)
     game.bid_round()
     print(game.bids)

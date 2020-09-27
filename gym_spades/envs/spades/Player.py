@@ -25,38 +25,42 @@ class player:
         for s in self.hand_by_suit:
             s.sort()
 
+        # initialize some variables
+        self.team_tricks = 0
+        self.team_bid = -1
+        self.bid_amount = -1
+
     # default action: a random player
-    def play(self, state, round_so_far, spades_broken):
+    def play(self, game):
         from gym_spades.envs.spades import cards
 
-        c = self._play(state, round_so_far, spades_broken)
+        c = self._play(game)
         self.hand.remove(c)
         self.hand_by_suit[cards.suit(c)].remove(c)
         return c
 
+    def _play(self, game):
+        cards = self.get_legal_cards(game)
+        return random.choice(cards)
+
     def game_end(self, trick_taken, points):
         return
 
-    def _play(self, state, round_so_far, spades_broken):
-        cards = self.get_legal_cards(round_so_far, spades_broken)
-        return random.choice(cards)
-
-    def get_legal_cards(self, round_so_far, spades_broken):
+    def get_legal_cards(self, game):
         from gym_spades.envs.spades import cards
 
         # if it's our lead, we can do anything
-        if len(round_so_far) == 0:
-            if spades_broken:
+        if len(game.round_so_far) == 0:
+            if game.spades_broken:
                 return list(itertools.chain.from_iterable([
                     self.hand_by_suit[1],self.hand_by_suit[2],self.hand_by_suit[3],
                 ]))
             else:
                 return self.hand
         # must follow lead if we can
-        start_suit = cards.suit(self.round[0])
         legal_cards = []
-        if len(self.hand_by_suit[start_suit]) > 0:
-            legal_cards = self.hand_by_suit[start_suit]
+        if len(self.hand_by_suit[game.suit_lead]) > 0:
+            legal_cards = self.hand_by_suit[game.suit_lead]
         else:
             # if we can't follow suit, we can do anything
             return self.hand
@@ -146,7 +150,8 @@ class player:
                 if liability == 0:
                     # bid nil
                     print("bidding nil")
-                    return spades.NIL
+                    self.bid_amount = spades.NIL
+                    return self.bid_amount
         
         # not bidding nil, so determine what we _are_ bidding
 
@@ -167,14 +172,16 @@ class player:
         # cannot bid 0
         if points <= 0:
             print("was 0, now bidding 1")
-            return 1
+            self.bid_amount = 1
+            return self.bid_amount
 
         # add some randomness?
         # only used when training
         if player.bid_random:
-            r += random.choice([-1,0,1])
+            r = random.choice([-1,0,1])
             print("random =", r)
             points += r
 
         print("bidding ", points)
-        return points
+        self.bid_amount = points
+        return self.bid_amount

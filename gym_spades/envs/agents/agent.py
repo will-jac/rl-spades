@@ -80,7 +80,6 @@ class agent(player):
         else:
             return 4
 
-
     def get_state(self, game):
         
         # https://arxiv.org/pdf/1912.11323v1.pdf page 10, top right

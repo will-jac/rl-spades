@@ -8,8 +8,8 @@ from gym_spades.envs.spades import cards, spades
 class rule_based_0(player):
     suits = ['S', 'H', 'C', 'D']
     # humans have no choice for bidding - sorry!
-    def _play(self, state, round):
-        return random.choice(self.get_legal_cards())
+    def _play(self, game):
+        return random.choice(self.get_legal_cards(game))
     # F.1: Number of sure future takes
     # Worst case: All unseen spades are held by a single opponent
     # and all the spades tricks are lead by the agent. Only spades

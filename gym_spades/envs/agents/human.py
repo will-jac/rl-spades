@@ -7,7 +7,9 @@ from gym_spades.envs.spades.cards import cards
 class human(player):
     suits = ['S', 'H', 'C', 'D']
     # humans have no choice for bidding - sorry!
-    def _play(self, state, round, spades_broken):
+    def _play(self, game):
+        print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
+        print("Your hand:\t", [cards.card_str(c) for c in self.hand])
         while True:
             print("What card will you play? (S,H,C,D for suit, eg 10H)")
             card = input()
@@ -17,10 +19,5 @@ class human(player):
             if card in self.hand:
                 return card
             print("Invalid card! Please select a card in your hand:", [cards.card_str(c) for c in self.hand])
-    
-    def get_state(self, game):
-        print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
-        print("Your hand:\t", [cards.card_str(c) for c in self.hand])
-        return None
 
 
