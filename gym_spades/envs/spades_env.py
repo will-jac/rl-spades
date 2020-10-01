@@ -6,6 +6,8 @@ from gym_spades.envs.spades.spades import spades
 from gym_spades.envs.spades.cards import cards
 from gym_spades.envs.spades.player import player
 
+import pickle
+from datetime import datetime
 
 class SpadesEnv(gym.Env, spades):
     metadata = {'render.modes': ['human']}
@@ -42,34 +44,17 @@ class SpadesEnv(gym.Env, spades):
         
         for i in range(4):
             print(self.results[i][-1])
-        
-    # def render(self, mode='human'):
-    #     ...
-    # def close(self):
-    #     ...  
-
-    # def get_state(self, player):
-    #     have_highest = self.have_highest_card_in_lead_suit(player)
-    #     return (
-    #         # have_highest_card_in_lead_suit
-    #         have_highest,
-    #         # suit_lead
-    #         self.suit_lead,
-    #         # spades_played
-    #         self.spades_played,
-    #         # can_win
-    #         self.can_win(player),
-    #         # smallest_suit
-    #         self.smallest_suit(player),
-    #         # trick_num
-    #         self.round_counter // 4,
-    #         # is_over_bid
-    #         self.is_over_bid,
-
-    #     )
+    
+    def save(self):
+        for i in range(4):
+            f = open('qfa-'+i+'-'+str(datetime.now()).replace(' ','_').replace(':','-'), 'wb')
+            pickle.dump(self.agents[i], f)
+            f.close()
 
 if __name__=="__main__":
     from gym_spades.envs.agents import fa_agent, qfa
-    agents = [qfa(), fa_agent(), qfa(), fa_agent()]
+    agents = [qfa(), qfa(), qfa(), qfa()]
     s = SpadesEnv(agents)
-    s.run(100)
+    while True:
+        s.run(1000)
+        s.save()
