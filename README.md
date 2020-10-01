@@ -16,3 +16,10 @@ When playing (training), use the [appropriate environment](./gym_spades/envs/spa
 cd gym-spades
 pip install -e .
 ```
+
+## Usage
+
+Jack:
+```bash
+pipenv run python file.py
+```

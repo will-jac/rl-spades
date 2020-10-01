@@ -100,6 +100,8 @@ class spades:
 
         assert self.round_counter < 13 and self.mode == spades.PLAY
 
+        #print(self.round_counter, [len(p.hand) for p in self.players])
+
         self.round_so_far = []
 
         self.suit_lead = spades.NO_LEAD 
@@ -112,12 +114,13 @@ class spades:
         self.winning_rank = cards.ACE
 
         for i in range(4):
+            #print(i)
             c = self.players[p].play(self)
             self.round_so_far.append(c)
 
             s = cards.suit(c) 
             r = cards.rank(c)
-            print("played:", cards.card_str(c))
+            #print("\t", cards.card_str(c))
             self.discard_by_suit[s].append(c)
             self.discard_by_suit[s].sort()
 
@@ -156,10 +159,21 @@ class spades:
         self.round_counter += 1
 
         # send info to players
-        self.players[self.winning].team_tricks += 1
-        self.players[(self.winning + 2) % 4].team_tricks += 1
-        # return the (index of the) player that took the round
-        return self.winning
+        self.players[self.winning].set_reward(1)
+        self.players[(self.winning + 2) % 4].set_reward(1)
+        self.players[(self.winning + 1) % 4].set_reward(0)
+        self.players[(self.winning + 3) % 4].set_reward(0)
+
+        if self.round_counter < 13:
+            return True
+        else:
+            self.mode = spades.GAMEOVER
+            return False
+
+    def end_of_game(self):
+        for i in range(4):
+            #print(i)
+            c = self.players[i]._play(None)
 
     def game_over(self):
         return self.round_counter == 13

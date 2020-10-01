@@ -1,6 +1,7 @@
 from gym_spades.envs.spades.player import player
 from gym import error, spaces, utils
 
+import numpy as np
 import itertools
 import random
 
@@ -8,22 +9,33 @@ import random
 class fa_agent(player):
 
     def __init__(self):
+        super().__init__()
         self.round_type = None
 
     def _play(self, game):
+        if game == None:
+            return
+            
         from gym_spades.envs.spades import cards
-        print("playing:",self.index)
-        cards.print_hand(self.hand)
+        # print("playing:",self.index)
+        #cards.print_hand(self.hand)
         actions = self.get_legal_cards(game)
-        for action in actions:
-            self.get_features(game, action)
-        cards = self.get_legal_cards(game)
-        return random.choice(cards)
+        # for action in actions:
+        #     self.get_features(game, action)
+        # if len(actions) == 0:
+        #     return 0
+        return random.choice(actions)
 
-    def get_feature_space(self):
-        return [0]*45 # size of the vector returned by get_state
+    def _get_feature_space(self):
+        return [0]*51 # size of the vector returned by get_state
 
     def get_features(self, game, action):
+        
+        if game is None or action is None:
+            return 1
+
+        # from gym_spades.envs.spades import cards
+        # print(cards.card_str(action))
         # game = spades object, the current game being played
         # action = proposed card to be played
         
@@ -40,7 +52,7 @@ class fa_agent(player):
         # 8: double nil    both players in a partnership bid nil   
         if self.round_type is None:
             self.round_type = [0]*9
-            self.round_type[self.get_round_type(game)] = 1
+            self.round_type[self._get_round_type(game)] = 1
         # endregion round type
         # region player lead
         # [1,0,0,0] = our lead
@@ -61,7 +73,7 @@ class fa_agent(player):
             suit_lead[game.suit_lead] = 1
         # endregion suit lead
         # region action is winning
-        self.action_winning = self.action_is_winning(game, action)
+        self.action_winning = self._action_is_winning(game, action)
         # endregion action is winning
         # region round counter
         round_counter = [0]*13
@@ -77,39 +89,40 @@ class fa_agent(player):
                 # wins the trick (eg play Q clubs on 3 clubs lead)
                 self.action_winning,
                 # play a spade on a non-spade lead  
-                self.action_is_cutting(game, action),
+                self._action_is_cutting(game, action),
                 # follow suit
-                self.action_is_following(game, action),
+                self._action_is_following(game, action),
                 # can someone play a higher suit than us?
-                self.action_is_boss_in_suit(game, action),
+                self._action_is_boss_in_suit(game, action),
                 # Could a future player have a higher card in suit? 
                 # Are they likely to be out of the suit?
                 #self.likelihood_of_action_beaten_by_future_player(game, action),            
             ],
             # how many times has the lead suit been lead?
-            self.discrete(self.num_suit_lead_in_round(game, action), 13),
+            self._discrete(self._num_suit_lead_in_round(game, action), 13),
             # Not including
             # self.action_breaks_spades(game, action)
             # does this action break our bid?
-            self.discrete(self.action_breaks_bid(game, action),2),
-            #self.discrete(self.can_win(game),2),
-            self.discrete(self.partner_is_winning(game),2),
+            self._discrete(self._action_breaks_bid(game, action),2),
+            #self._discrete(self._can_win(game),2),
+            self._discrete(self._partner_is_winning(game),2),
             # trick num
             round_counter
         ]
-        print(state)
-        ret = list(itertools.chain.from_iterable(state))
+        # print(state)
+        ret = np.array(list(itertools.chain.from_iterable(state)))
 
-        print(len(ret))
-        print(ret)
+        # print(len(ret))
+        # print(np.shape(ret))
+        # print(ret)
         return(ret)
 
-    def discrete(self, result, size):
+    def _discrete(self, result, size):
         ret = [0]*size
         ret[result] = 1
         return ret
 
-    def action_is_winning(self, game, action):
+    def _action_is_winning(self, game, action):
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5:
@@ -135,7 +148,7 @@ class fa_agent(player):
                 # someone else has a larger card in suit than action
                 return 0
 
-    def action_breaks_bid(self, game, action):
+    def _action_breaks_bid(self, game, action):
         # if we bid nil, don't take a trick!
         if self.bid == 0:
             if self.action_winning:
@@ -149,7 +162,7 @@ class fa_agent(player):
                 return 1
         return 0
 
-    def num_suit_lead_in_round(self, game, action):
+    def _num_suit_lead_in_round(self, game, action):
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == game.NO_LEAD:
@@ -157,7 +170,7 @@ class fa_agent(player):
         else:
             return game.num_suit_lead_in_round[game.suit_lead]
     
-    def action_is_cutting(self, game, action):
+    def _action_is_cutting(self, game, action):
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5: # no lead
@@ -166,7 +179,7 @@ class fa_agent(player):
             return 0
         return 1
 
-    def action_is_following(self, game, action):
+    def _action_is_following(self, game, action):
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5: # no lead
@@ -175,13 +188,13 @@ class fa_agent(player):
             return 1
         return 0
 
-    def action_is_boss_in_suit(self, game, action):
+    def _action_is_boss_in_suit(self, game, action):
         from gym_spades.envs.spades import cards
 
         s = cards.suit(action)
 
         discard = game.discard_by_suit[s]
-
+        
         if len(discard) == 0:
             # if there's no cards played in this suit and we have the ace, ret 1
             if cards.rank(action) == cards.ACE:
@@ -215,7 +228,7 @@ class fa_agent(player):
         
         if self.round_type is None:
             self.round_type = [0]*9
-            self.round_type[self.get_round_type(game)] = 1
+            self.round_type[self._get_round_type(game)] = 1
 
         # [1,0,0,0] = our lead
         # [0,1,0,0] = prev player lead (second to play)
@@ -243,14 +256,14 @@ class fa_agent(player):
             self.round_type,
             player_lead,
             suit_lead,
-            self.have_next_highest_in_suit(game),
-            self.smallest_suit(),
-            self.player_does_not_have_suit(game), 
+            self._have_next_highest_in_suit(game),
+            self._smallest_suit(),
+            self._player_does_not_have_suit(game), 
             game.num_suit_lead_in_round,
             [
                 spades_played,
-                self.can_win(game),
-                self.partner_is_winning(game),
+                self._can_win(game),
+                self._partner_is_winning(game),
                 # trick num
                 game.round_counter,
             ],
@@ -262,8 +275,8 @@ class fa_agent(player):
         print(ret)
         return(ret)
 
-    # discrete(8)
-    def get_round_type(self, game):
+    # _discrete(8)
+    def _get_round_type(self, game):
         nil = []
         for i, b in enumerate(game.bids):
             if b == 0:
@@ -298,7 +311,7 @@ class fa_agent(player):
             return 4
 
     # binary
-    def can_win(self, game):
+    def _can_win(self, game):
         from gym_spades.envs.spades import cards
 
         for c in self.legal_cards:
@@ -308,13 +321,13 @@ class fa_agent(player):
         return 0
     
     # binary
-    def partner_is_winning(self, game):
+    def _partner_is_winning(self, game):
         if game.winning == (self.index + 2) % 4:
             return 1
         return 0
 
-    # discrete(4)
-    def have_next_highest_in_suit(self, game):
+    # _discrete(4)
+    def _have_next_highest_in_suit(self, game):
         from gym_spades.envs.spades import cards
 
         ret = [0]*4
@@ -340,8 +353,8 @@ class fa_agent(player):
                     break
         return ret
 
-    # discrete(4)
-    def smallest_suit(self):
+    # _discrete(4)
+    def _smallest_suit(self):
         ret = [0]*4
         n = 14
         index = 0
@@ -352,8 +365,8 @@ class fa_agent(player):
         ret[index] = 1
         return ret
 
-    # discrete(3*4)
-    def player_does_not_have_suit(self, game):
+    # _discrete(3*4)
+    def _player_does_not_have_suit(self, game):
         r = []
         for i in range(4):
             if i != self.index:

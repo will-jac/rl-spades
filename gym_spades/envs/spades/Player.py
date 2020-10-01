@@ -29,14 +29,20 @@ class player:
         self.team_tricks = 0
         self.team_bid = -1
         self.bid_amount = -1
+        self.rewards = []
 
     # default action: a random player
     def play(self, game):
         from gym_spades.envs.spades import cards
 
         c = self._play(game)
+        #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
         self.hand.remove(c)
-        self.hand_by_suit[cards.suit(c)].remove(c)
+        try:
+            self.hand_by_suit[cards.suit(c)].remove(c)
+        except ValueError:
+            print(self.hand_by_suit)
+
         return c
 
     def _play(self, game):
@@ -51,10 +57,14 @@ class player:
 
         # if it's our lead, we can do anything
         if len(game.round_so_far) == 0:
-            if game.spades_broken:
-                return list(itertools.chain.from_iterable([
+            if not game.spades_broken:
+                legal_cards = list(itertools.chain.from_iterable([
                     self.hand_by_suit[1],self.hand_by_suit[2],self.hand_by_suit[3],
                 ]))
+                if len(legal_cards) == 0:
+                    return self.hand
+                else:
+                    return legal_cards
             else:
                 return self.hand
         # must follow lead if we can
@@ -65,8 +75,43 @@ class player:
             # if we can't follow suit, we can do anything
             return self.hand
         
+        if len(legal_cards) == 0:
+            # if we have no legal cards, we can do anything
+            return self.hand
+
         return legal_cards
 
+    def set_reward(self, reward):
+        # called by game after each trick
+        # 1 if we took it, 0 else
+ 
+        #TODO: consider changing this
+        if self.bid_amount != 0:
+            # can we still make our bid?
+            if reward == 1:
+                if self.team_tricks < self.team_bid:
+                    self.reward = 10
+                else:
+                    self.reward = 1
+            elif (13 - len(self.rewards)) >= (self.team_bid - self.team_tricks):
+                self.reward = 0
+            else:
+                self.reward = -10*self.team_bid
+        else:
+            if reward == 1:
+                self.reward = -100
+            elif len(self.rewards) == 12:
+                self.reward = 100
+            else:
+                self.reward = 0
+
+        self.team_tricks += reward
+
+        self.rewards.append(self.rewards)
+
+    def result(self):
+        return [self.rewards]
+        
     # bid ==> rule-based agent
     # https://arxiv.org/pdf/1912.11323v1.pdf
     # 5.1, Competing Algorithms (RB), and G.1, G.2
