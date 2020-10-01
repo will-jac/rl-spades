@@ -1,5 +1,4 @@
 from gym_spades.envs.spades.player import player
-from gym import error, spaces, utils
 
 import numpy as np
 import itertools

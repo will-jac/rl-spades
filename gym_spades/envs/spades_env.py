@@ -1,6 +1,4 @@
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 
 from gym_spades.envs.spades.spades import spades
 from gym_spades.envs.spades.cards import cards
@@ -55,6 +53,6 @@ if __name__=="__main__":
     from gym_spades.envs.agents import fa_agent, qfa
     agents = [qfa(), qfa(), qfa(), qfa()]
     s = SpadesEnv(agents)
-    while True:
-        s.run(1000)
+    for i in range(1):
+        s.run(100)
         s.save()
