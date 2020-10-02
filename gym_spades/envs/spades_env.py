@@ -45,7 +45,7 @@ class SpadesEnv(gym.Env, spades):
     
     def save(self):
         for i in range(4):
-            f = open('qfa-'+i+'-'+str(datetime.now()).replace(' ','_').replace(':','-'), 'wb')
+            f = open('qfa-'+str(i)+'-'+str(datetime.now()).replace(' ','_').replace(':','-'), 'wb')
             pickle.dump(self.agents[i], f)
             f.close()
 
@@ -53,6 +53,6 @@ if __name__=="__main__":
     from gym_spades.envs.agents import fa_agent, qfa
     agents = [qfa(), qfa(), qfa(), qfa()]
     s = SpadesEnv(agents)
-    for i in range(1):
-        s.run(100)
+    while True:
+        s.run(1000)
         s.save()
