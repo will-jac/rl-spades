@@ -9,8 +9,14 @@ class player:
     def get_state(self):
         ...
 
+    def __init__(self):
+        self.rewards = []
+        self.game_count = 0 
+        self.total_rewards = 0
+
     def set_index(self, index):
         self.index = index
+        self.partner_index = (index + 2) % 4
     
     def set_hand(self, hand):
         from gym_spades.envs.spades import cards
@@ -29,6 +35,12 @@ class player:
         self.team_tricks = 0
         self.team_bid = -1
         self.bid_amount = -1
+
+        self.game_count += 1
+
+        self.total_rewards += sum(self.rewards)
+        self.avg_rewards = self.total_rewards / self.game_count
+
         self.rewards = []
 
     # default action: a random player
@@ -36,7 +48,7 @@ class player:
         from gym_spades.envs.spades import cards
 
         c = self._play(game)
-        #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
+        print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
         self.hand.remove(c)
         try:
             self.hand_by_suit[cards.suit(c)].remove(c)
@@ -81,14 +93,14 @@ class player:
 
         return legal_cards
 
-    def set_reward(self, reward):
+    def set_reward(self, winning_player):
         # called by game after each trick
         # 1 if we took it, 0 else
  
         #TODO: consider changing this
         if self.bid_amount != 0:
             # can we still make our bid?
-            if reward == 1:
+            if winning_player in [self.index, self.partner_index]:
                 if self.team_tricks < self.team_bid:
                     self.reward = 10
                 else:
@@ -97,21 +109,20 @@ class player:
                 self.reward = 0
             else:
                 self.reward = -10*self.team_bid
+        # we bid nil
         else:
-            if reward == 1:
+            if winning_player == self.index:
                 self.reward = -100
             elif len(self.rewards) == 12:
                 self.reward = 100
             else:
                 self.reward = 0
 
-        self.team_tricks += reward
+        if winning_player in [self.index, self.partner_index]:
+            self.team_tricks += 1
 
-        self.rewards.append(self.rewards)
+        self.rewards.append(self.reward)
 
-    def result(self):
-        return [self.rewards]
-        
     # bid ==> rule-based agent
     # https://arxiv.org/pdf/1912.11323v1.pdf
     # 5.1, Competing Algorithms (RB), and G.1, G.2
