@@ -9,7 +9,7 @@ from gym_spades.envs.agents import fa_agent
 
 class qfa(fa_agent):
     
-    def __init__(self, epsilon=0.01, learning_rate=0.01):
+    def __init__(self, epsilon=0.01, learning_rate=0.01, discount_factor=0.01):
         super().__init__()
         # initalize a state vector
         # TODO: add a way to initalize this from a file
@@ -18,6 +18,7 @@ class qfa(fa_agent):
 
         self.epsilon = epsilon
         self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
 
         # statistics
         self.rewards = []
@@ -69,7 +70,7 @@ class qfa(fa_agent):
 
     def _backup(self, prev_val, prev_features, reward, next_state):
         next_val, action = self._q(next_state)
-        td_target = reward + self.learning_rate * next_val - self.prev_val
+        td_target = reward + self.discount_factor * next_val - self.prev_val
         # back up our weights
         # perform stochastic gradient descent (features, q_next)
         # pg 205

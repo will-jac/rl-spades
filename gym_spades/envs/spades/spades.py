@@ -159,10 +159,13 @@ class spades:
         self.round_counter += 1
 
         # send info to players
-        self.players[self.winning].set_reward(1)
-        self.players[(self.winning + 2) % 4].set_reward(1)
-        self.players[(self.winning + 1) % 4].set_reward(0)
-        self.players[(self.winning + 3) % 4].set_reward(0)
+        for p in self.players:
+            p.set_reward(self.winning)
+        print("winning:", self.winning)
+        # self.players[self.winning].set_reward()
+        # self.players[(self.winning + 2) % 4].set_reward()
+        # self.players[(self.winning + 1) % 4].set_reward()
+        # self.players[(self.winning + 3) % 4].set_reward()
 
         if self.round_counter < 13:
             return True
