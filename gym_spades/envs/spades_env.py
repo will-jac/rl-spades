@@ -11,15 +11,15 @@ class SpadesEnv(gym.Env, spades):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, agents):
-        
+
         self.agents = agents
         self.game = spades(self.agents)
-        
+
         self.results = [[] for i in range(4)]
 
     def episode(self):
         self.reset()
-        
+
         for i in range(13):
             self.game.play_round()
 
@@ -37,7 +37,7 @@ class SpadesEnv(gym.Env, spades):
     def run(self, iter):
         for i in range(iter):
             self.episode()
-    
+
     def save(self, name=0):
         for i in range(4):
             f = open('qfa-'+str(i)+'-'+str(name), 'wb')
@@ -46,15 +46,22 @@ class SpadesEnv(gym.Env, spades):
 
 if __name__=="__main__":
     from gym_spades.envs.agents import fa_agent, qfa
-    agents = [qfa(), qfa(), qfa(), qfa()]
+
+    # load in the agents
+    names = ['qfa/qfa0', 'qfa/qfa1', 'qfa/qfa2', 'qfa/qfa3']
+    agents = []
+    for n in names:
+        with open(n) as f:
+            agent = pickle.load(f)
+            agents.append(agent)
+
     s = SpadesEnv(agents)
     for i in range(10):
         s.run(10)
         s.save(i)
     iter = 0
-    #exit()
-    #while True:
-    for i in range(1000):
-        s.run(100)
+    while True:
+        for i in range(100):
+            s.run(100)
         s.save(iter)
         iter += 1
