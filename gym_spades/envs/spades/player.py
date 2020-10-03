@@ -11,7 +11,7 @@ class player:
 
     def __init__(self):
         self.rewards = []
-        self.game_count = 0 
+        self.game_count = 0
         self.total_rewards = 0
         self.team_bid = 0
         self.opponent_team_bid = 0
@@ -19,7 +19,7 @@ class player:
     def set_index(self, index):
         self.index = index
         self.partner_index = (index + 2) % 4
-    
+
     def set_hand(self, hand):
         from gym_spades.envs.spades import cards
 
@@ -91,7 +91,7 @@ class player:
         else:
             # if we can't follow suit, we can do anything
             return self.hand
-        
+
         if len(legal_cards) == 0:
             # if we have no legal cards, we can do anything
             return self.hand
@@ -104,10 +104,10 @@ class player:
         if winning_player in [self.index, self.partner_index]:
             self.team_tricks += 1
 
-        # can we make our bid still?    
+        # can we make our bid still?
         if (self.team_bid - self.team_tricks) > (13 - len(self.rewards)):
             self.can_make_bid = False
-        
+
         if self.lost_bid:
             self.reward = 0
         # did we bid nil?
@@ -140,7 +140,7 @@ class player:
         self.rewards.append(self.reward)
 
         #print("\t\t", self.index, self.reward, self.can_make_bid, self.lost_bid)
-        
+
 
     # bid ==> rule-based agent
     # https://arxiv.org/pdf/1912.11323v1.pdf
@@ -227,7 +227,7 @@ class player:
                     #print("bidding nil")
                     self.bid_amount = spades.NIL
                     return self.bid_amount
-        
+
         # not bidding nil, so determine what we _are_ bidding
 
         # add in spades bids
@@ -243,7 +243,7 @@ class player:
                 if len(self.hand_by_suit[i]) < 2:
                     #print("points += 1")
                     points += 1
-        
+
         # cannot bid 0
         if points <= 0:
             #print("was 0, now bidding 1")

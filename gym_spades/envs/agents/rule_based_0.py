@@ -17,12 +17,12 @@ class rule_based_0(player):
     # Sure takes: Boss (eg A) or # more than unseen (eg [K,Q]=1 trick).
     # def num_sure_future_takes(self, game):
     #     for c in self.hand_by_suit[cards.SPADES]:
-              
+
     #         game.discard_by_suit[cards.SPADES]
 
     def getState(self, game):
         # https://arxiv.org/pdf/1912.11323v1.pdf page 10, top right
-        
+
         # round type of:
         # under         no nils, sum of bids in {8-10}
         # over          no nils, sum of bids in {11-13}
@@ -37,7 +37,7 @@ class rule_based_0(player):
         # end game conditions
         # partnership can win game this round
         # opponents can win game this round
-        
- 
+
+
 
         return

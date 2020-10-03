@@ -15,14 +15,14 @@ class cards:
     KING = 11
     ACE = 12
     RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
-    # spades, hearts, clubs, diamonds 
+    # spades, hearts, clubs, diamonds
     SPADES = 0
     HEARTS = 1
     CLUBS = 2
     DIAMONDS = 3
-    
+
     SUITS = [SPADES, HEARTS, CLUBS, DIAMONDS]
-    
+
     SUIT_STRING = ['♠', '♥', '♣', '♦']
 
     NOCARD = 52

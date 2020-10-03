@@ -11,7 +11,7 @@ class agent(player):
             ##### round-specific
             # round_type
             spaces.Discrete(9),
-            
+
             ##### trick-specific
             #'player_lead'
             spaces.Discrete(4),
@@ -30,7 +30,7 @@ class agent(player):
             spaces.MultiBinary(4),
             #'smallest_suit'
             spaces.Discrete(4),
-            
+
             # progression of round
             #'trick_num'
             spaces.Discrete(13),
@@ -51,7 +51,7 @@ class agent(player):
         for i, b in enumerate(game.bids):
             if b == 0:
                 nil.append(i)
-        
+
         if len(nil) == 1:
             if nil == self.index or nil == ((self.index + 2) % 4):
                 return 5 # we nil
@@ -81,33 +81,33 @@ class agent(player):
             return 4
 
     def get_state(self, game):
-        
+
         # https://arxiv.org/pdf/1912.11323v1.pdf page 10, top right
-        
+
         # round type of:
         # 0: strong under  no nils, sum of bids < 8
         # 1: under         no nils, sum of bids in {8-10}
         # 2: over          no nils, sum of bids in {11-13}
-        # 3: 14            no nils, sum of bids == 14 
+        # 3: 14            no nils, sum of bids == 14
         # 4: strong over   no nils, sum of bids > 14
         # 5: we nil        single nil bid in partnership
         # 6: opponents nil single nil bid in opponents
         # 7: nil vs nil    each has one nil                        # illegal
         # 8: double nil    both players in a partnership bid nil   # illegal
-        
+
         if self.round_type is None:
             self.round_type = self.get_round_type(game)
 
         return (
             self.round_type,
             # in this, agent == player 0
-            4 - len(game.round), 
+            4 - len(game.round),
         )
 
         # end game conditions
         # partnership can win game this round
         # opponents can win game this round
-        
- 
+
+
 
         return

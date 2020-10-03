@@ -52,10 +52,9 @@ if __name__=="__main__":
         s.run(10)
         s.save(i)
     iter = 0
-    exit()
-    while True:
-    #for i in range(1):
-        #for i in range(10):
-        s.run(10)
+    #exit()
+    #while True:
+    for i in range(1000):
+        s.run(100)
         s.save(iter)
         iter += 1
