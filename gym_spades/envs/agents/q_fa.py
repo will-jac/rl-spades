@@ -13,8 +13,7 @@ class qfa(fa_agent):
         super().__init__()
         # initalize a state vector
         # TODO: add a way to initalize this from a file
-        self.weights = np.zeros(len(self._get_feature_space()))
-        print(self.weights)
+        self.weights = np.zeros((self._get_feature_space()))
 
         self.epsilon = epsilon
         self.learning_rate = learning_rate
@@ -29,52 +28,62 @@ class qfa(fa_agent):
         self.prev_val = None
 
     def _play(self, game):  
-        if not self.prev_val is None:
-            # backing up involves computing optimal action for this state
-            self.prev_val, action = self._backup(self.prev_val, self.prev_features, self.reward, game)
-        else:
+        if self.prev_val is None:
             self.prev_val, action = self._q(game)
+        else:
+            # backing up involves computing optimal action for this state
+            self.prev_val, action = self._backup(self.prev_features, game)
         
         return action
 
     def _q(self, state):
-        if state == None:
-            # terminal state
+        # terminal condition
+        if state is None:
             return 0, None
 
         # epsilon-greedy policy
         actions = self.get_legal_cards(state)
+        
+        num_actions = len(actions)
+        if num_actions == 1:
+            self.prev_features = self.get_features(state, actions[0])
+            v = self._value(self.prev_features)
+            return v, actions[0]
+        # probability of selecting any non-optimal value = epsilon 
+        # => each non-optimal action has prob epsilon / (num_actions - 1)
+        action_probs = np.ones(num_actions, dtype=float) * self.epsilon / (num_actions - 1)
 
         # iterate through all the state/action pairs, and find the maximum one
-        max_value = None
-        max_action = None
-        max_index = 0
-        for i, action in enumerate(actions):
-            self.prev_features = self.get_features(state, action)
-            value = self._value(self.prev_features)
-            if max_value is None or max_value < value:
-                max_value = value
-                max_action = action
-                max_index = i
+        values = np.zeros(num_actions, dtype=float)
+        features = np.zeros(shape=(num_actions,self._get_feature_space()))
 
-        if random.uniform(0,1) < self.epsilon:
-            # return a non-optimal a different action
-            if len(actions) > 1:
-                new_actions = actions[:max_index] + actions[max_index + 1:]
-                return max_value, random.choice(new_actions)
+        for i, a in enumerate(actions):
+            features[i] = self.get_features(state, a)
+            values[i] = self._value(features[i])
 
-        return max_value, max_action
+        max_index = np.random.choice(np.flatnonzero(values == values.max()))
+        max_value = values[max_index]
+        # prob of maximum action = 1 - epsilon 
+        action_probs[max_index] = (1.0 - self.epsilon)
+
+        #print(action_probs)
+        
+        action_index = np.random.choice(np.arange(num_actions), p=action_probs)
+        self.prev_features = features[action_index]
+
+        return max_value, actions[action_index]
     
     def _value(self, features):
         return np.dot(self.weights, features)
 
-    def _backup(self, prev_val, prev_features, reward, next_state):
+    def _backup(self, prev_features, next_state):
         next_val, action = self._q(next_state)
-        td_target = reward + self.discount_factor * next_val - self.prev_val
+        td_target = self.reward + self.discount_factor * next_val - self.prev_val
+        #print(self.index, "backup",  self.reward, next_val, self.prev_val, td_target, self.weights)
         # back up our weights
         # perform stochastic gradient descent (features, q_next)
         # pg 205
-        self.weights = self.weights - self.learning_rate*(td_target) * prev_features
+        self.weights = self.weights + self.learning_rate*(td_target) * prev_features
 
         return next_val, action
 

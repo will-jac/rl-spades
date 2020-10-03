@@ -14,8 +14,6 @@ class SpadesEnv(gym.Env, spades):
         
         self.agents = agents
         self.game = spades(self.agents)
-
-        self.game.bid_round()
         
         self.results = [[] for i in range(4)]
 
@@ -25,9 +23,9 @@ class SpadesEnv(gym.Env, spades):
         for i in range(13):
             self.game.play_round()
 
-        assert self.game.mode == spades.GAMEOVER
+        assert self.game.is_game_over()
 
-        self.game.end_of_game()
+        self.game.end_game()
 
         for a in self.agents:
             self.results[a.index].append(a.result())
@@ -39,9 +37,6 @@ class SpadesEnv(gym.Env, spades):
     def run(self, iter):
         for i in range(iter):
             self.episode()
-        
-        for i in range(4):
-            print(self.results[i][-1])
     
     def save(self, name=0):
         for i in range(4):

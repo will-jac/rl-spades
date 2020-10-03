@@ -13,6 +13,8 @@ class player:
         self.rewards = []
         self.game_count = 0 
         self.total_rewards = 0
+        self.team_bid = 0
+        self.opponent_team_bid = 0
 
     def set_index(self, index):
         self.index = index
@@ -43,12 +45,15 @@ class player:
 
         self.rewards = []
 
+        self.can_make_bid = True
+        self.lost_bid = False
+
     # default action: a random player
     def play(self, game):
         from gym_spades.envs.spades import cards
 
         c = self._play(game)
-        print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
+        #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
         self.hand.remove(c)
         try:
             self.hand_by_suit[cards.suit(c)].remove(c)
@@ -95,20 +100,31 @@ class player:
 
     def set_reward(self, winning_player):
         # called by game after each trick
-        # 1 if we took it, 0 else
- 
-        #TODO: consider changing this
-        if self.bid_amount != 0:
-            # can we still make our bid?
-            if winning_player in [self.index, self.partner_index]:
-                if self.team_tricks < self.team_bid:
-                    self.reward = 10
+
+        if winning_player in [self.index, self.partner_index]:
+            self.team_tricks += 1
+
+        # can we make our bid still?    
+        if (self.team_bid - self.team_tricks) > (13 - len(self.rewards)):
+            self.can_make_bid = False
+        
+        if self.lost_bid:
+            self.reward = 0
+        # did we bid nil?
+        elif self.bid_amount != 0:
+            if self.can_make_bid:
+                if winning_player == self.index:
+                    if self.team_tricks < self.team_bid:
+                        self.reward = 10
+                    else:
+                        self.reward = 1
+                elif winning_player == self.partner_index:
+                    self.reward = 0
                 else:
-                    self.reward = 1
-            elif (13 - len(self.rewards)) >= (self.team_bid - self.team_tricks):
-                self.reward = 0
+                    # opponents took the trick
+                    self.reward = 0
             else:
-                self.reward = -10*self.team_bid
+                self.reward = -1*(sum(self.rewards) + self.team_bid)
         # we bid nil
         else:
             if winning_player == self.index:
@@ -118,10 +134,13 @@ class player:
             else:
                 self.reward = 0
 
-        if winning_player in [self.index, self.partner_index]:
-            self.team_tricks += 1
+        if not self.can_make_bid:
+            self.lost_bid = True
 
         self.rewards.append(self.reward)
+
+        #print("\t\t", self.index, self.reward, self.can_make_bid, self.lost_bid)
+        
 
     # bid ==> rule-based agent
     # https://arxiv.org/pdf/1912.11323v1.pdf
@@ -129,8 +148,8 @@ class player:
     def bid(self, current_bids):
         from gym_spades.envs.spades import cards
 
-        if True:
-            print("Player", self.index, ":", [cards.card_str(c) for c in self.hand])
+        # if True:
+        #     print("Player", self.index, ":", [cards.card_str(c) for c in self.hand])
 
         #self.hand.sort()
 
@@ -154,21 +173,21 @@ class player:
                 # points classifier (G.1)
                 if r == cards.ACE:
                     # ace = 1 trick
-                    print("ace point", i)
+                    #print("ace point", i)
                     points += 1
                 elif l > 1 and r == cards.KING:
                     # non-singleton king = 1 trick
-                    print("king point", i)
+                    #print("king point", i)
                     points += 1
                 elif l > 1 and r == cards.QUEEN and i == cards.SPADES:
                     # non-singleton queen of spades
                     if l > 2:
                         # non-doubleton queen of spades = 1 trick
-                        print("queen point a", i)
+                        #print("queen point a", i)
                         points += 1
                     elif j != l - 1 and cards.rank(self.hand_by_suit[i][j+1]) == cards.ACE:
                         # doubleton queen of spades + ace of spades = 1 trick
-                        print("queen point b", i)
+                        #print("queen point b", i)
                         points += 1
 
         spades_count = len(self.hand_by_suit[cards.SPADES])
@@ -183,7 +202,7 @@ class player:
             elif len(self.hand_by_suit[i]) == 1 and liability_by_suits[i] == 0:
                 can_overcome_liabilities += 0.5
 
-        print("liabilities by suit:", liability_by_suits, "can overcome:", can_overcome_liabilities)
+        #print("liabilities by suit:", liability_by_suits, "can overcome:", can_overcome_liabilities)
         # should we bid nil?
         if liability_by_suits[cards.SPADES] == 0 and len(self.hand_by_suit[cards.SPADES]) < 4:
             # cannot overcome liabilities in spades (trump) via sluffing off
@@ -205,7 +224,7 @@ class player:
                 liability = sum(liability_by_suits)
                 if liability == 0:
                     # bid nil
-                    print("bidding nil")
+                    #print("bidding nil")
                     self.bid_amount = spades.NIL
                     return self.bid_amount
         
@@ -213,21 +232,21 @@ class player:
 
         # add in spades bids
         if spades_count < 2:
-            print("spades -= 1")
+            #print("spades -= 1")
             points -= 1
         elif spades_count > 3:
-            print("spades +=", (spades_count - 3))
+            #print("spades +=", (spades_count - 3))
             points += (spades_count - 3)
         elif spades_count == 3:
             # 3 spades + void or singleton in side suit
             for i in range(1, 4): # the rest of the suits, spades == 0
                 if len(self.hand_by_suit[i]) < 2:
-                    print("points += 1")
+                    #print("points += 1")
                     points += 1
         
         # cannot bid 0
         if points <= 0:
-            print("was 0, now bidding 1")
+            #print("was 0, now bidding 1")
             self.bid_amount = 1
             return self.bid_amount
 
@@ -235,9 +254,9 @@ class player:
         # only used when training
         if player.bid_random:
             r = random.choice([-1,0,1])
-            print("random =", r)
+            #print("random =", r)
             points += r
 
-        print("bidding ", points)
+        #print("bidding ", points)
         self.bid_amount = points
         return self.bid_amount

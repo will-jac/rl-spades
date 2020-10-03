@@ -26,7 +26,7 @@ class fa_agent(player):
         return random.choice(actions)
 
     def _get_feature_space(self):
-        return [0]*65 # size of the vector returned by get_state
+        return 65 # size of the vector returned by get_state
 
     def get_features(self, game, action):
         
@@ -80,7 +80,7 @@ class fa_agent(player):
         # endregion round counter
         # flatten the list
         state = [
-            1, # bias term
+            [1], # bias term
             self._discrete(self.bid_amount, 13),
             self.round_type,
             player_lead,

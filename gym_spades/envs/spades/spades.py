@@ -13,8 +13,6 @@ class spades:
         # the agents
         self.players = players
 
-        self.reset()
-
     # reset the game to pay again
     def reset(self, shuffle_players = False):
         from gym_spades.envs.spades.cards import cards
@@ -82,9 +80,13 @@ class spades:
         t1 = self.bids[1] + self.bids[3]
 
         self.players[0].team_bid = t0
+        self.players[0].opponent_team_bid = t1
         self.players[1].team_bid = t1
+        self.players[1].opponent_team_bid = t0
         self.players[2].team_bid = t0
+        self.players[2].opponent_team_bid = t1
         self.players[3].team_bid = t1
+        self.players[3].opponent_team_bid = t0
 
         if (t0 + t1) > 13:
             self.is_over_bid = True
@@ -173,13 +175,12 @@ class spades:
             self.mode = spades.GAMEOVER
             return False
 
-    def end_of_game(self):
+    def end_game(self):
         for i in range(4):
-            #print(i)
             c = self.players[i]._play(None)
 
-    def game_over(self):
-        return self.round_counter == 13
+    def is_game_over(self):
+        return self.round_counter == 13 and self.mode == spades.GAMEOVER
 
     def _build_state(self, player):
         # a --really-- simplistic state
@@ -192,7 +193,7 @@ class spades:
         if len(self.round_so_far) == 0:
             # it's our lead
             # do we have the highest card in any suit?
-            for s in range(4):
+            for s in range(4): 
                 i = -1
                 for r in range(cards.ACE, cards.TWO, -1):
                     if self.discard_by_suit[s][i] == r:
