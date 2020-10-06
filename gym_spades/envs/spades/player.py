@@ -244,18 +244,17 @@ class player:
                     #print("points += 1")
                     points += 1
 
-        # cannot bid 0
-        if points <= 0:
-            #print("was 0, now bidding 1")
-            self.bid_amount = 1
-            return self.bid_amount
-
         # add some randomness?
         # only used when training
         if player.bid_random:
             r = random.choice([-1,0,1])
             #print("random =", r)
             points += r
+
+        if points > 13:
+            points = 13
+        elif points <= 0:
+            points = 1
 
         #print("bidding ", points)
         self.bid_amount = points

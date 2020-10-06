@@ -7,7 +7,7 @@ def load(f_name):
     print(a.avg_rewards)
     print(a.team_bid, a.bid_amount)
     print(a.rewards)
-    
+    print(a.prev_features)
     return(a)
 
 

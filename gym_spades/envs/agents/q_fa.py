@@ -9,6 +9,7 @@ from gym_spades.envs.agents import fa_agent
 
 class qfa(fa_agent):
     
+
     def __init__(self, epsilon=0.01, learning_rate=0.01, discount_factor=0.01):
         super().__init__()
         # initalize a state vector
