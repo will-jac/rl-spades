@@ -13,8 +13,8 @@ class rule_based_0(player):
         if game == None:
             return
         
-        print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
-        print("Your hand:\t", [cards.card_str(c) for c in self.hand])
+        #print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
+        #print("Your hand:\t", [cards.card_str(c) for c in self.hand])
         
         #Cards in our hand that can be played
         legal_cards = self.get_legal_cards(game) #This array is sorted
