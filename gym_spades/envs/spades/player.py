@@ -4,17 +4,21 @@ from gym_spades.envs.spades import spades
 
 class player:
 
-    bid_random = True
-
     def get_state(self):
         ...
 
     def __init__(self):
+        self.name = 'player'
         self.rewards = []
         self.game_count = 0
         self.total_rewards = 0
         self.team_bid = 0
         self.opponent_team_bid = 0
+        self.bid_random = True
+        self.points_hist = []
+
+    def result(self):
+        return [self.rewards]
 
     def set_index(self, index):
         self.index = index
@@ -54,7 +58,12 @@ class player:
 
         c = self._play(game)
         #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
-        self.hand.remove(c)
+        try:
+            self.hand.remove(c)
+        except ValueError:
+            print('error removing ' + str(c) + ' from hand')
+            print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
+            print(self.name)
         try:
             self.hand_by_suit[cards.suit(c)].remove(c)
         except ValueError:
@@ -63,6 +72,9 @@ class player:
         return c
 
     def _play(self, game):
+        if game is None:
+            return 0
+
         cards = self.get_legal_cards(game)
         return random.choice(cards)
 
@@ -246,7 +258,7 @@ class player:
 
         # add some randomness?
         # only used when training
-        if player.bid_random:
+        if self.bid_random:
             r = random.choice([-1,0,1])
             #print("random =", r)
             points += r

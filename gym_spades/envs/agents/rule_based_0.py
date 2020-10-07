@@ -7,39 +7,44 @@ from gym_spades.envs.spades.cards import cards
 # that picks a card based on the cards taht have been played that round and what it can see in its hand
 
 class rule_based_0(player):
+
+    def __init__(self):
+        super().__init__()
+        self.name = 'heuristic'
+
     # no choice for bidding - sorry!
     def _play(self, game):
-        
+
         if game == None:
             return
-        
-        print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
-        print("Your hand:\t", [cards.card_str(c) for c in self.hand])
-        
+
+        #print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
+        #print("Your hand:\t", [cards.card_str(c) for c in self.hand])
+
         #Cards in our hand that can be played
         legal_cards = self.get_legal_cards(game) #This array is sorted
         card_suits = np.ndarray.tolist(np.floor_divide(legal_cards, 13))
         card_ranks = np.ndarray.tolist(np.mod(legal_cards, 13))
-        
+
         #If there is only one card in our hand, there are no decisions to be made
         if len(legal_cards) == 1:
             card = legal_cards[0]
             return card
-        
+
         #This vector holds the value for the number of cards for each suit
         num_each_suit = [0,0,0,0]
         for c in card_suits:
             num_each_suit[c] = num_each_suit[c] + 1
-        
+
         #If there are any non-spades cards, store the list indicies for all the non-spades cards
         if num_each_suit[0] < len(legal_cards):
             non_spades_ids = slice(num_each_suit[0], len(legal_cards))
-        
-        
-        
+
+
+
         #Rules for playing when bid is not nill
         if self.bid_amount != 0:
-            
+
             #When leading in a round
             if len(game.round_so_far) == 0:
                 #If you can't play a spades, play the highest ranking non-spades card
@@ -52,12 +57,12 @@ class rule_based_0(player):
                     card_id = num_each_suit[0]-1
                     card = legal_cards[card_id]
                     return card
-            
+
             #When not leading the round
             else:
                 #Find the leading suit
                 lead_suit = game.round_so_far[0]//13
-        
+
                 #Find the current winning card
                 top_card = game.round_so_far[0]
                 suit = lead_suit
@@ -67,18 +72,18 @@ class rule_based_0(player):
                         top_card = c
                     elif c//13 == suit and c%13 > top_card%13:
                         top_card = c
-                        
+
                 top_suit = top_card//13
                 top_rank = top_card%13
-                
-                
-                #If have cards in the leading suit, 
+
+
+                #If have cards in the leading suit,
                 if num_each_suit[lead_suit] != 0:
                     #the legal_cards list should only contain cards of this one suit
-                    
-                    
-                    #if can win the round 
-                    #i.e. current winning card is same suit as leading suit 
+
+
+                    #if can win the round
+                    #i.e. current winning card is same suit as leading suit
                     #and have card with rank larger than current winning card
                     if lead_suit == top_suit and top_rank < card_ranks[len(legal_cards)-1]:
                         #if 4th player in the round
@@ -87,7 +92,7 @@ class rule_based_0(player):
                             id = 0
                             while card_ranks[id] <= top_rank:
                                 id = id + 1
-                            
+
                             card = legal_cards[id]
                             return card
                         #if 2nd or 3nd in round
@@ -95,14 +100,14 @@ class rule_based_0(player):
                             #Use the maximum rank card of this suit
                             card = legal_cards[len(legal_cards)-1]
                             return card
-                            
+
                     #if it's not possible to win the round
                     else:
                         #play smallest card of the suit
                         card = legal_cards[0]
                         return card
-                
-                
+
+
                 #If don't have cards in leading suit
                 else:
                     #if top card is spades and can beat it
@@ -113,7 +118,7 @@ class rule_based_0(player):
                             id = 0
                             while card_ranks[id] <= top_rank:
                                 id = id + 1
-                                    
+
                             card = legal_cards[id]
                             return card
                         #if 2nd or 3rd player in round
@@ -121,7 +126,7 @@ class rule_based_0(player):
                             #play largest spades card
                             card = legal_cards[num_each_suit[0]-1]
                             return card
-                    
+
                     #if unable to beat the top card
                     else:
                         #if only have spades cards
@@ -136,10 +141,10 @@ class rule_based_0(player):
                             card = legal_cards[card_id]
                             return card
 
-                    
-            
+
+
         #Rules for playing when bid is nil
-        else: 
+        else:
             #When leading in a round
             if len(game.round_so_far) == 0:
                 #If you can only play a spades, play the lowest ranking spades card
@@ -151,12 +156,12 @@ class rule_based_0(player):
                     card_id = card_ranks[non_spades_ids].index(min(card_ranks[non_spades_ids])) + num_each_suit[0]
                     card = legal_cards[card_id]
                     return card
-            
+
             #When not leading a round
             else:
                 #Find the leading suit
                 lead_suit = game.round_so_far[0]//13
-        
+
                 #Find the current winning card
                 top_card = game.round_so_far[0]
                 suit = lead_suit
@@ -166,10 +171,10 @@ class rule_based_0(player):
                         top_card = c
                     elif c//13 == suit and c%13 > top_card%13:
                         top_card = c
-                        
+
                 top_suit = top_card//13
                 top_rank = top_card%13
-                
+
 
                 #if had card of leading suit
                 if num_each_suit[lead_suit] != 0:
@@ -186,7 +191,7 @@ class rule_based_0(player):
                             id = len(legal_cards)-1
                             while card_ranks[id] >= top_rank:
                                 id = id - 1
-                                    
+
                             card = legal_cards[id]
                             return card
                         #if don't have card smaller than top card
@@ -194,7 +199,7 @@ class rule_based_0(player):
                             #play smallest ranked card in that suit
                             card = legal_cards[0]
                             return card
-                        
+
                 #if didn't have card of leading suit
                 else:
                     #if have spade
@@ -205,7 +210,7 @@ class rule_based_0(player):
                             id = num_each_suit[0]-1
                             while card_ranks[id] >= top_rank:
                                 id = id - 1
-                                    
+
                             card = legal_cards[id]
                             return card
                         #if either top card is not a spade or didn't have spade of lower value
@@ -220,49 +225,8 @@ class rule_based_0(player):
                             else:
                                 #play smallest ranked card
                                 card = legal_cards[0]
-                    #if don't have spade 
+                    #if don't have spade
                     else:
                         #play largest ranked card
                         card = legal_cards[len(legal_cards)-1]
                         return card
-                    
-                    
-                        
-    def result(self):
-        return 0    
-
-            
-            
-            
-    # F.1: Number of sure future takes
-    # Worst case: All unseen spades are held by a single opponent
-    # and all the spades tricks are lead by the agent. Only spades
-    # cards are sure winners.
-    # Sure takes: Boss (eg A) or # more than unseen (eg [K,Q]=1 trick).
-    # def num_sure_future_takes(self, game):
-    #     for c in self.hand_by_suit[cards.SPADES]:
-
-    #         game.discard_by_suit[cards.SPADES]
-
-    #def getState(self, game):
-        # https://arxiv.org/pdf/1912.11323v1.pdf page 10, top right
-
-        # round type of:
-        # under         no nils, sum of bids in {8-10}
-        # over          no nils, sum of bids in {11-13}
-        # 14            no nils, sum of bids == 14
-        # strong under  no nils, sum of bids <= 8
-        # strong over   no nils, sum of bids >= 15
-        # we nil        single nil bid in partnership
-        # opponents nil single nil bid in opponents
-        # nil vs nil    each has one nil                        # illegal
-        # double nil    both players in a partnership bid nil   # illegal
-
-        # end game conditions
-        # partnership can win game this round
-        # opponents can win game this round
-
-
-
-        #return
-
