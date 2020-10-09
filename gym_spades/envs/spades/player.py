@@ -1,11 +1,10 @@
 import random
 import itertools
-from gym_spades.envs.spades import spades
+from gym_spades.envs.spades import spades, cards
+
+from typing import List
 
 class player:
-
-    def get_state(self):
-        ...
 
     def __init__(self):
         self.name = 'player'
@@ -17,16 +16,14 @@ class player:
         self.bid_random = True
         self.points_hist = []
 
-    def result(self):
+    def result(self) -> List[int]:
         return [self.rewards]
 
-    def set_index(self, index):
+    def set_index(self, index: int):
         self.index = index
         self.partner_index = (index + 2) % 4
 
-    def set_hand(self, hand):
-        from gym_spades.envs.spades import cards
-
+    def set_hand(self, hand: List[cards]):
         # sorted hand
         self.hand = hand
         self.hand.sort()
@@ -53,17 +50,17 @@ class player:
         self.lost_bid = False
 
     # default action: a random player
-    def play(self, game):
-        from gym_spades.envs.spades import cards
-
+    def play(self, game: spades) -> cards:
         c = self._play(game)
         #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
         try:
             self.hand.remove(c)
         except ValueError:
-            print('error removing ' + str(c) + ' from hand')
-            print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
-            print(self.name)
+            print(self.name, 'encountered an ERROR', self.index, self.bid_amount)
+            print('error removing ' + str(c) + ' from hand ' + str(self.hand))
+            print('round so far:', game.starting_player, game.round_so_far, 'spades broken:', game.spades_broken)
+            print([cards.card_str(c) for c in self.hand])
+
         try:
             self.hand_by_suit[cards.suit(c)].remove(c)
         except ValueError:
@@ -82,14 +79,10 @@ class player:
         return
 
     def get_legal_cards(self, game):
-        from gym_spades.envs.spades import cards
-
         # if it's our lead, we can do anything
         if len(game.round_so_far) == 0:
             if not game.spades_broken:
-                legal_cards = list(itertools.chain.from_iterable([
-                    self.hand_by_suit[1],self.hand_by_suit[2],self.hand_by_suit[3],
-                ]))
+                legal_cards = self.hand_by_suit[1] + self.hand_by_suit[2] + self.hand_by_suit[3]
                 if len(legal_cards) == 0:
                     return self.hand
                 else:
@@ -158,13 +151,6 @@ class player:
     # https://arxiv.org/pdf/1912.11323v1.pdf
     # 5.1, Competing Algorithms (RB), and G.1, G.2
     def bid(self, current_bids):
-        from gym_spades.envs.spades import cards
-
-        # if True:
-        #     print("Player", self.index, ":", [cards.card_str(c) for c in self.hand])
-
-        #self.hand.sort()
-
         liability_by_suits = [0]*4
         points = 0
         # determine points in hand

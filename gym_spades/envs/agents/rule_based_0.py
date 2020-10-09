@@ -160,20 +160,11 @@ class rule_based_0(player):
             #When not leading a round
             else:
                 #Find the leading suit
-                lead_suit = game.round_so_far[0]//13
+                lead_suit = game.suit_lead
 
                 #Find the current winning card
-                top_card = game.round_so_far[0]
-                suit = lead_suit
-                for c in game.round_so_far:
-                    if c//13 == 0 and suit != 0:
-                        suit = 0
-                        top_card = c
-                    elif c//13 == suit and c%13 > top_card%13:
-                        top_card = c
-
-                top_suit = top_card//13
-                top_rank = top_card%13
+                top_suit = game.winning_suit
+                top_rank = game.winning_rank
 
 
                 #if had card of leading suit
@@ -225,6 +216,7 @@ class rule_based_0(player):
                             else:
                                 #play smallest ranked card
                                 card = legal_cards[0]
+                                return card
                     #if don't have spade
                     else:
                         #play largest ranked card

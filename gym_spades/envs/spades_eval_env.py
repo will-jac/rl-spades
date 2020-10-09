@@ -5,15 +5,23 @@ from gym_spades.envs import SpadesEnv
 import pickle
 import copy
 from datetime import datetime
+import numpy as np
+
+import csv
+
+flatten = lambda l: [item for sublist in l for item in sublist]
 
 class SpadesEvaluation(SpadesEnv):
 
-    def __init__(self, agent_to_eval):
+    def __init__(self):
+        self.prev_weights = None
+
+    def load_agent(self, agent_to_eval):
         agent_to_eval.bid_random = False
         agent_to_eval.epsilon = 0
         self.agent_to_eval = agent_to_eval
 
-    def load(self, comparison_agents):
+    def _load_comparison(self, comparison_agents):
         for a in comparison_agents:
             a.bid_random = False
 
@@ -34,47 +42,64 @@ class SpadesEvaluation(SpadesEnv):
     def _eval(self, n=100, rounds_per_game=50):
         for i in range(n):
             self.run(rounds_per_game)
-            # index, avg_rewards, points / game, num_wins
-            yield (i, self.agents[0].avg_rewards, float(sum(self.agents[0].points_hist)) / (i+1), self.num_wins(rounds_per_game))
+            # index, rewards / round, points / game, num_wins
+            yield (i, self.agents[0].avg_rewards, sum(self.agents[0].points_hist) / n, self.num_wins(rounds_per_game))
 
     def eval_random(self, n=100, rounds_per_game=50):
-        self.load([player(), player()])
-        yield from self._eval(n, rounds_per_game)
+        self._load_comparison([player(), player()])
+
+        reward_per_round_sum = points_per_game_sum = num_wins = 0
+        for i, rpr, ppg, nw in self._eval(n, rounds_per_game):
+            reward_per_round_sum += rpr
+            points_per_game_sum += ppg
+            num_wins += nw
+        return [reward_per_round_sum / n, points_per_game_sum / n, num_wins, num_wins / (n*rounds_per_game)]
 
     def eval_heuristic(self, n=100, rounds_per_game=50):
-        self.load([rule_based_0(), rule_based_0()])
-        yield from self._eval(n, rounds_per_game)
+        self._load_comparison([rule_based_0(), rule_based_0()])
 
-    def eval(self, n=50, rounds_per_game=50):
-        print('total number of runs =', n*rounds_per_game)
-        tot_reward_per_game = tot_points_per_game = tot_num_wins = 0
-        for i, rpg, ppg, nw in self.eval_random(n, rounds_per_game):
-            tot_reward_per_game += rpg
-            tot_points_per_game += ppg
-            tot_num_wins += nw
-        yield (tot_reward_per_game, tot_points_per_game, tot_num_wins, tot_num_wins / (n*rounds_per_game))
+        reward_per_round_sum = points_per_game_sum = num_wins = 0
+        for i, rpr, ppg, nw in self._eval(n, rounds_per_game):
+            reward_per_round_sum += rpr
+            points_per_game_sum += ppg
+            num_wins += nw
+        return [reward_per_round_sum / n, points_per_game_sum / n, num_wins, num_wins / (n*rounds_per_game)]
 
-        tot_reward_per_game = tot_points_per_game = tot_num_wins = 0
-        for i, rpg, ppg, nw in self.eval_heuristic(n, rounds_per_game):
-            tot_reward_per_game += rpg
-            tot_points_per_game += ppg
-            tot_num_wins += nw
-        yield (tot_reward_per_game, tot_points_per_game, tot_num_wins, tot_num_wins / (n*rounds_per_game))
+    def eval_convergence(self):
+        if self.prev_weights is None:
+            self.prev_weights = self.agent_to_eval.weights
+            return [np.sum(np.absolute(self.prev_weights))]
+        else:
+            diff = np.sum(np.absolute(self.agent_to_eval.weights - self.prev_weights))
+            self.prev_weights = self.agent_to_eval.weights
+            return [diff]
 
+    def eval(self, n=10, rounds_per_game=25):
+        # returns list, eg [1, 2, 2, ... ]
+        return self.eval_convergence() + self.eval_random(n, rounds_per_game) + self.eval_heuristic(n, rounds_per_game)
 
+    def eval_to_csv(self, csv_writer, row_label, n=10, rounds_per_game=10):
+        csv_writer.writerow([row_label] + self.eval(n, rounds_per_game))
 
 if __name__ == "__main__":
     from gym_spades.envs.agents import fa_agent, qfa, rule_based_0
 
     import sys, os
 
-    if len(sys.argv) != 2:
-        print('invalid usage! please provide a folder of models to open for evaluation')
+    if len(sys.argv) < 3:
+        print('usage: spades_eval_env.py OUTPUT_CSV_NAME [PATH_TO_AGENT_FOLDER]+')
         exit()
 
-    for filename in os.listdir(sys.argv[1]):
-        with open(os.path.join(sys.argv[1], filename), 'rb') as f:
-            agent = pickle.load(f)
-        s = SpadesEvaluation(agent)
-        for v in s.eval():
-            print(v)
+    with open(sys.argv[1], 'a+') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
+
+        for i in range(2, len(sys.argv)):
+            s = SpadesEvaluation()
+            for filename in os.listdir(sys.argv[i]):
+                if int(filename.split('-')[2]) < 5000:
+                    continue
+                with open(os.path.join(sys.argv[i], filename), 'rb') as f:
+                    agent = pickle.load(f)
+                s.load_agent(agent)
+                s.eval_to_csv(writer, filename)
