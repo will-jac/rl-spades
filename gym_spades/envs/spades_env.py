@@ -5,11 +5,11 @@ from gym_spades.envs.spades.player import player
 import pickle
 from datetime import datetime
 
-class SpadesEnv(spades):
+class SpadesEnv():
 
-    def __init__(self, agents):
+    def __init__(self, players):
 
-        self.agents = agents
+        self.players = players
         self.results = [[] for i in range(4)]
 
     def _episode(self):
@@ -23,25 +23,26 @@ class SpadesEnv(spades):
 
         self.game.end_game()
 
-        for a in self.agents:
-            self.results[a.index].append(a.result())
+        for p in self.players:
+            self.results[p.index].append(p.result())
 
     def _reset(self):
-        self.game = spades(self.agents)
-        for a in self.agents:
-            a.points_hist = []
+        self.game = spades(self.players)
+        for p in self.players:
+            p.points_hist = []
 
     def run(self, n):
         self._reset()
         for i in range(n):
             self._episode()
+            print("game over, resetting")
 
     def save(self, name=0):
         for i in range(4):
             f = open('tmp/qfa-'+str(i)+'-'+str(name), 'wb')
-            pickle.dump(self.agents[i], f)
+            pickle.dump(self.players[i], f)
             f.close()
-            self.agents[i].total_rewards = 0
+            self.players[i].total_rewards = 0
 
 if __name__=="__main__":
     from gym_spades.envs.agents import fa_agent, qfa
@@ -53,7 +54,8 @@ if __name__=="__main__":
     #     with open(n, 'rb') as f:
     #         agent = pickle.load(f)
     #         agents.append(agent)
-    agents = [qfa(), qfa(), qfa(), qfa()]
+    q = qfa()
+    agents = [q.create_player() for i in range(4)]
     s = SpadesEnv(agents)
     iter = 0
     while True:

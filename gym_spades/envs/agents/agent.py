@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from gym_spades.envs.spades import cards, player, spades
 from gym import error, spaces, utils
 
@@ -7,15 +9,68 @@ from typing import Any, List
 # 'normal' tabular based agent
 class agent(player):
 
-    def _play(self, game):
+    def _play(self, state: dict[cards, list[int]]) -> cards:
         ...
+
+    def create_player(self):
+        return agent_player(self)
+
+class agent_player(player):
+
+    def __init__(self, parent: agent):
+        super().__init__()
+        self.parent = parent
+
+    def _play(self, game: spades) -> 'cards':
+        self.parent._play(game)
+
+    def set_reward(self, winning_player: int):
+        # called by game after each trick
+
+        if winning_player in [self.index, self.partner_index]:
+            self.team_tricks += 1
+
+        # can we make our bid still?
+        if (self.team_bid - self.team_tricks) > (13 - len(self.rewards)):
+            self.can_make_bid = False
+
+        if self.lost_bid:
+            self.reward = 0
+        # did we bid nil?
+        elif self.bid_amount != 0:
+            if self.can_make_bid:
+                if winning_player == self.index:
+                    if self.team_tricks < self.team_bid:
+                        self.reward = 10
+                    else:
+                        self.reward = 1
+                elif winning_player == self.partner_index:
+                    self.reward = 0
+                else:
+                    # opponents took the trick
+                    self.reward = 0
+            else:
+                self.reward = -1*(sum(self.rewards) + self.team_bid)
+        # we bid nil
+        else:
+            if winning_player == self.index:
+                self.reward = -100
+            elif len(self.rewards) == 12:
+                self.reward = 100
+            else:
+                self.reward = 0
+
+        if not self.can_make_bid:
+            self.lost_bid = True
+
+        self.rewards.append(self.reward)
 
     def _discrete(self, result: int, size: int) -> List[int]:
         ret = [0]*size
         ret[result] = 1
         return ret
 
-    def _get_round_type(self, game: 'spades'):
+    def _get_round_type(self, game: spades):
         nil = []
         for i, b in enumerate(game.bids):
             if b == 0:
@@ -49,23 +104,15 @@ class agent(player):
         else:
             return 4
 
-    def _partner_is_winning(self, game: 'spades') -> int:
+    def _partner_is_winning(self, game: spades) -> int:
         if game.winning == (self.index + 2) % 4:
             return 1
         return 0
 
-class agent_player(player):
-
-    def __init__(self, parent: agent):
-        super().__init__()
-        self.parent = parent
-
-    def _play(self, game: 'spades') -> 'cards':
-        self.parent._play(game)
 
 class td_player(agent_player):
 
-    def _play(self, game: 'spades') -> 'cards':
+    def _play(self, game: spades) -> 'cards':
         return 0
 
     # DO NOT USE FOR FUNCTION APPROXIMATION
@@ -133,14 +180,14 @@ class td_player(agent_player):
         print(ret)
         return(ret)
 
-    def _can_win(self, game: 'spades') -> int:
+    def _can_win(self, game: spades) -> int:
         for c in self.legal_cards:
             if cards.suit(c) == game.winning_suit: # either lead or spades
                 if cards.rank(c) > game.winning_rank:
                     return 1
         return 0
 
-    def _have_next_highest_in_suit(self, game: 'spades') -> List[int]:
+    def _have_next_highest_in_suit(self, game: spades) -> List[int]:
         ret = [0]*4
         for i, discard in enumerate(game.discard_by_suit):
             if len(self.hand_by_suit[i]) == 0:

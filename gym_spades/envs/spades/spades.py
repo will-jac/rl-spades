@@ -1,4 +1,5 @@
 import random
+#from gym_spades.envs.spades import cards, player
 
 class spades:
     BID = 0
@@ -13,11 +14,11 @@ class spades:
         # the agents
         self.players = players
         self.shuffle_players = True
+        self.game_starting_player = 0
 
     # reset the game to pay again
     def reset(self):
         from gym_spades.envs.spades.cards import cards
-        from gym_spades.envs.spades.player import player
 
         # keep track of the number of tricks taken
         self.tricks = [0] * 4
@@ -41,15 +42,11 @@ class spades:
         self.deck = cards.create_deck()
 
         if self.shuffle_players:
-            self.starting_player = random.randrange(0,4)
-        else:
-            self.starting_player = 0
-
-        self.game_starting_player = self.starting_player
+            self.game_starting_player = random.randrange(0,4)
+        self.starting_player = self.game_starting_player
 
         for i in range(4):
-            self.players[i].set_index(i)
-            self.players[i].set_hand(self.deck[i*13 : (i+1)*13])
+            self.players[i].reset(i, self.deck[i*13 : (i+1)*13])
 
         self.mode = spades.BID
 
@@ -222,84 +219,11 @@ class spades:
 
         # set the next starting player
         self.game_starting_player = self._next_player(self.game_starting_player)
+        # shouldn't shuffle players now, because next round just continues
         self.shuffle_players = False
 
     def is_game_over(self):
         return self.round_counter == 13 and self.mode == spades.GAMEOVER
-
-    def _build_state(self, player):
-        # a --really-- simplistic state
-        return [self.round_so_far, player.hand]
-
-    def have_highest_card_in_lead_suit(self, player):
-        from gym_spades.envs.spades.cards import cards
-        from gym_spades.envs.spades.player import player
-
-        if len(self.round_so_far) == 0:
-            # it's our lead
-            # do we have the highest card in any suit?
-            for s in range(4):
-                i = -1
-                for r in range(cards.ACE, cards.TWO, -1):
-                    if self.discard_by_suit[s][i] == r:
-                        continue
-                    elif r in player.hand:
-                        return True
-                    else:
-                        break
-            return False
-
-        # someone else has already lead
-        s = cards.suit(round[0])
-        i = -1
-        for r in range(cards.ACE, cards.TWO, -1):
-            if self.discard_by_suit[s][i] == r:
-                continue
-            elif r in round:
-                return False
-            elif r in player.hand:
-                return True
-            else:
-                return False
-
-    def can_win(self, player, have_highest):
-        from gym_spades.envs.spades.cards import cards
-        from gym_spades.envs.spades.player import player
-
-        if self.suit_lead == spades.NO_LEAD:
-            return True
-
-        can_play_spades = True
-        can_win_spades = False
-        for c in player.hand:
-            if cards.suit(c) == self.suit_lead:
-                can_play_spades = False
-                if cards.rank(c) > cards.rank(self.round_so_far[0]):
-                    return True
-            elif cards.suit(c) == cards.SPADES:
-                if self.spades_played:
-                    if cards.rank(c) > self.winning_rank:
-                        can_win_spades = True
-                else:
-                    can_win_spades = True
-
-        if can_play_spades:
-            return can_win_spades
-
-    def smallest_suit(self, player):
-        from gym_spades.envs.spades.cards import cards
-        from gym_spades.envs.spades.player import player
-
-        suits_in_hand = [0]*4
-        for c in player.hand:
-            suits_in_hand[cards.suit(c)] += 1
-        smallest = 14
-        suit = cards.CLUBS
-        for s in suits_in_hand:
-            if s < smallest:
-                suit = cards.SUITS[s]
-                smallest = s
-        return suit
 
 if __name__ == "__main__":
     from gym_spades.envs.spades import spades

@@ -1,8 +1,8 @@
+from __future__ import annotations
+
 import random
 import itertools
-from gym_spades.envs.spades import spades, cards
-
-from typing import List
+from gym_spades.envs.spades import cards
 
 class player:
 
@@ -16,14 +16,13 @@ class player:
         self.bid_random = True
         self.points_hist = []
 
-    def result(self) -> List[int]:
+    def result(self) -> list[int]:
         return [self.rewards]
 
-    def set_index(self, index: int):
+    def reset(self, index: int, hand: list[cards]):
         self.index = index
         self.partner_index = (index + 2) % 4
 
-    def set_hand(self, hand: List[cards]):
         # sorted hand
         self.hand = hand
         self.hand.sort()
@@ -50,7 +49,7 @@ class player:
         self.lost_bid = False
 
     # default action: a random player
-    def play(self, game: spades) -> cards:
+    def play(self, game: 'spades') -> cards:
         c = self._play(game)
         #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
         try:
@@ -68,17 +67,14 @@ class player:
 
         return c
 
-    def _play(self, game):
+    def _play(self, game: 'spades') -> cards:
         if game is None:
             return 0
 
         cards = self.get_legal_cards(game)
         return random.choice(cards)
 
-    def game_end(self, trick_taken, points):
-        return
-
-    def get_legal_cards(self, game):
+    def get_legal_cards(self, game: 'spades') -> list[cards]:
         # if it's our lead, we can do anything
         if len(game.round_so_far) == 0:
             if not game.spades_broken:
@@ -103,54 +99,13 @@ class player:
 
         return legal_cards
 
-    def set_reward(self, winning_player):
-        # called by game after each trick
-
-        if winning_player in [self.index, self.partner_index]:
-            self.team_tricks += 1
-
-        # can we make our bid still?
-        if (self.team_bid - self.team_tricks) > (13 - len(self.rewards)):
-            self.can_make_bid = False
-
-        if self.lost_bid:
-            self.reward = 0
-        # did we bid nil?
-        elif self.bid_amount != 0:
-            if self.can_make_bid:
-                if winning_player == self.index:
-                    if self.team_tricks < self.team_bid:
-                        self.reward = 10
-                    else:
-                        self.reward = 1
-                elif winning_player == self.partner_index:
-                    self.reward = 0
-                else:
-                    # opponents took the trick
-                    self.reward = 0
-            else:
-                self.reward = -1*(sum(self.rewards) + self.team_bid)
-        # we bid nil
-        else:
-            if winning_player == self.index:
-                self.reward = -100
-            elif len(self.rewards) == 12:
-                self.reward = 100
-            else:
-                self.reward = 0
-
-        if not self.can_make_bid:
-            self.lost_bid = True
-
-        self.rewards.append(self.reward)
-
-        #print("\t\t", self.index, self.reward, self.can_make_bid, self.lost_bid)
-
+    def set_reward(self, winning_player: int):
+        return
 
     # bid ==> rule-based agent
     # https://arxiv.org/pdf/1912.11323v1.pdf
     # 5.1, Competing Algorithms (RB), and G.1, G.2
-    def bid(self, current_bids):
+    def bid(self, current_bids: list[int]) -> int:
         liability_by_suits = [0]*4
         points = 0
         # determine points in hand
@@ -223,7 +178,7 @@ class player:
                 if liability == 0:
                     # bid nil
                     #print("bidding nil")
-                    self.bid_amount = spades.NIL
+                    self.bid_amount = 0
                     return self.bid_amount
 
         # not bidding nil, so determine what we _are_ bidding

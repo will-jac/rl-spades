@@ -1,37 +1,80 @@
+from __future__ import annotations
 
-from gym_spades.envs.spades import cards, player
-from gym_spades.envs.agents import agent
-
-from typing import List
+from gym_spades.envs.spades import spades, cards, player
+from gym_spades.envs.agents import agent, agent_player
 
 import numpy as np
 import itertools
 import random
 
-# function approximation agent
 class fa_agent(agent):
-
-    def __init__(self):
-        super().__init__()
-        self.round_type = None
-
-    def _play(self, game: 'spades') -> 'cards':
-        if game == None:
-            return
-
-        # print("playing:",self.index)
-        #cards.print_hand(self.hand)
-        actions = self.get_legal_cards(game)
-        # for action in actions:
-        #     self.get_features(game, action)
-        # if len(actions) == 0:
-        #     return 0
-        return random.choice(actions)
+    def _play(self, state: dict[cards, list[int]]) -> cards:
+        ...
 
     def _get_feature_space(self) -> int:
+        return fa_player.get_feature_space()
+
+    def create_player(self):
+        return fa_player(self)
+
+# function approximation agent
+class fa_player(agent_player):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.round_type = None
+
+        self.prev_value = None
+        self.prev_features = None
+
+        # statistics
+        self.rewards = []
+
+        self.cumulative_reward = 0.0
+
+    def reset(self, index: int, hand: list[cards]):
+        super().reset(index, hand)
+        self.prev_value = None
+        self.prev_features = None
+
+    def _play(self, game: spades) -> cards:
+        # print("playing:",self.index)
+        #cards.print_hand(self.hand)
+        if game is None:
+            state = None
+        else:
+            state = {}
+            actions = self.get_legal_cards(game)
+            for action in actions:
+                state[action] = self.get_features(game, action)
+
+        if self.prev_value is None:
+            self.prev_value, action, self.prev_features = self.parent._get_action(state)
+        else:
+            self.prev_value, action, self.prev_features = self._backup(state)
+
+        return action
+
+    def _backup(self, state: dict[cards, list[int]]) -> (float, cards):
+        value, action, features = self.parent._get_action(state)
+        td_target = self.reward + self.parent.discount_factor * value - self.prev_value
+
+        print(self.index, "backup",  self.parent.learning_rate, td_target, self.prev_features)
+        # back up our weights
+        # perform stochastic gradient descent (features, q_next)
+        # pg 205
+        self.parent.weights = self.parent.weights + self.parent.learning_rate * td_target * self.prev_features
+
+        return value, action, features
+
+    def result(self) -> (list[float], list[float]):
+        return (self.rewards, self.parent.weights)
+
+    @staticmethod
+    def get_feature_space() -> int:
         return 66 # size of the vector returned by get_state
 
-    def get_features(self, game: 'spades', action: 'cards') -> List[int]:
+    def get_features(self, game: spades, action: cards) -> list[int]:
 
         if game is None or action is None:
             return 1
@@ -122,7 +165,7 @@ class fa_agent(agent):
         # print(ret)
         return(ret)
 
-    def _action_is_winning(self, game: 'spades', action: 'cards') -> int:
+    def _action_is_winning(self, game: spades, action: cards) -> int:
 
         if game.suit_lead == 5:
             # all first cards played are winning
@@ -147,7 +190,7 @@ class fa_agent(agent):
                 # someone else has a larger card in suit than action
                 return 0
 
-    def _action_breaks_bid(self, game: 'spades', action: 'cards') -> int:
+    def _action_breaks_bid(self, game: spades, action: cards) -> int:
         # if we bid nil, don't take a trick!
         if self.bid == 0:
             if self.action_winning:
@@ -161,13 +204,13 @@ class fa_agent(agent):
                 return 1
         return 0
 
-    def _num_suit_lead_in_round(self, game: 'spades', action: 'cards') -> int:
+    def _num_suit_lead_in_round(self, game: spades, action: cards) -> int:
         if game.suit_lead == game.NO_LEAD:
             return game.num_suit_lead_in_round[cards.suit(action)]
         else:
             return game.num_suit_lead_in_round[game.suit_lead]
 
-    def _action_is_cutting(self, game: 'spades', action: 'cards') -> int:
+    def _action_is_cutting(self, game: spades, action: cards) -> int:
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5: # no lead
@@ -176,7 +219,7 @@ class fa_agent(agent):
             return 0
         return 1
 
-    def _action_is_following(self, game: 'spades', action: 'cards') -> int:
+    def _action_is_following(self, game: spades, action: cards) -> int:
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5: # no lead
@@ -185,7 +228,7 @@ class fa_agent(agent):
             return 1
         return 0
 
-    def _action_is_boss_in_suit(self, game: 'spades', action: 'cards') -> int:
+    def _action_is_boss_in_suit(self, game: spades, action: cards) -> int:
         from gym_spades.envs.spades import cards
 
         s = cards.suit(action)
