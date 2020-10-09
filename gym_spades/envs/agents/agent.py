@@ -50,7 +50,7 @@ class agent_player(player):
                     # opponents took the trick
                     self.reward = 0
             else:
-                self.reward = -1*(sum(self.rewards) + self.team_bid)
+                self.reward = -1*(sum(self.rewards) + 10*self.team_bid)
         # we bid nil
         else:
             if winning_player == self.index:
