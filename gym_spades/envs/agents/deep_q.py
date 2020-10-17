@@ -10,10 +10,7 @@ from gym_spades.envs.agents import fa_agent
 # q-learning player with function approximation
 # qfa
 
-class qfa(fa_agent):
-
-    # discount factor = gamma
-    # learning rate = alpha
+class deep_q(nn_agent):
     def __init__(self, epsilon: int=0.01, learning_rate: int=0.01, discount_factor: int=0.01):
         super().__init__()
         self.name = 'qfa'

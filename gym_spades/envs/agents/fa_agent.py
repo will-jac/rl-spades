@@ -59,7 +59,7 @@ class fa_player(agent_player):
         value, action, features = self.parent._get_action(state)
         td_target = self.reward + self.parent.discount_factor * value - self.prev_value
 
-        print(self.index, "backup",  self.parent.learning_rate, td_target, self.prev_features)
+        #print(self.index, "backup",  self.parent.learning_rate, td_target, self.prev_features)
         # back up our weights
         # perform stochastic gradient descent (features, q_next)
         # pg 205
