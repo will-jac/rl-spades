@@ -13,7 +13,7 @@ class player:
         self.total_rewards = 0
         self.team_bid = 0
         self.opponent_team_bid = 0
-        self.bid_random = True
+        self.bid_random = False
         self.points_hist = []
 
     def result(self) -> list[int]:
@@ -44,6 +44,8 @@ class player:
         self.avg_rewards = self.total_rewards / self.game_count
 
         self.rewards = []
+
+        self.reward = None
 
         self.can_make_bid = True
         self.lost_bid = False

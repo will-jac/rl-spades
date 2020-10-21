@@ -32,6 +32,8 @@ class fa_player(agent_player):
 
         self.cumulative_reward = 0.0
 
+        self.name='fa_player'
+
     def reset(self, index: int, hand: list[cards]):
         super().reset(index, hand)
         self.prev_value = None
@@ -57,13 +59,13 @@ class fa_player(agent_player):
 
     def _backup(self, state: dict[cards, list[int]]) -> (float, cards):
         value, action, features = self.parent._get_action(state)
-        td_target = self.reward + self.parent.discount_factor * value - self.prev_value
+        td_error = self.reward + self.parent.discount_factor * value - self.prev_value
 
         #print(self.index, "backup",  self.parent.learning_rate, td_target, self.prev_features)
         # back up our weights
         # perform stochastic gradient descent (features, q_next)
         # pg 205
-        self.parent.weights = self.parent.weights + self.parent.learning_rate * td_target * self.prev_features
+        self.parent.weights += self.parent.learning_rate * td_error * self.prev_features
 
         return value, action, features
 

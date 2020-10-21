@@ -3,7 +3,7 @@ import pickle
 def load(f_name):
     f = open(f_name, "rb")
     a = pickle.load(f)
-    print(a.parent.weights)
+    print(a.weights)
     print(a.avg_rewards)
     print(a.team_bid, a.bid_amount)
     print(a.rewards)

@@ -1,7 +1,5 @@
 import numpy as np
-from gym_spades.envs.spades.player import player
-from gym_spades.envs.spades.player import player
-from gym_spades.envs.spades.cards import cards
+from gym_spades.envs.spades import player, cards
 
 # This agent is not a learning agent, just a rules-based algorithm
 # that picks a card based on the cards taht have been played that round and what it can see in its hand

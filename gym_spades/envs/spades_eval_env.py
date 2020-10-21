@@ -33,8 +33,8 @@ class SpadesEvaluation(SpadesEnv):
     def num_wins(self, num_rounds):
         n = 0
         for i in range(num_rounds):
-            a = self.agents[0].points_hist[i]
-            b = self.agents[1].points_hist[i]
+            a = self.players[0].points_hist[i]
+            b = self.players[1].points_hist[i]
             if a > b:
                 n += 1
         return n
@@ -43,7 +43,7 @@ class SpadesEvaluation(SpadesEnv):
         for i in range(n):
             self.run(rounds_per_game)
             # index, rewards / round, points / game, num_wins
-            yield (i, self.agents[0].avg_rewards, sum(self.agents[0].points_hist) / n, self.num_wins(rounds_per_game))
+            yield (i, self.players[0].avg_rewards, sum(self.players[0].points_hist) / n, self.num_wins(rounds_per_game))
 
     def eval_random(self, n=100, rounds_per_game=50):
         self._load_comparison([player(), player()])
@@ -67,11 +67,11 @@ class SpadesEvaluation(SpadesEnv):
 
     def eval_convergence(self):
         if self.prev_weights is None:
-            self.prev_weights = self.agent_to_eval.weights
+            self.prev_weights = self.agent_to_eval.parent.weights
             return [np.sum(np.absolute(self.prev_weights))]
         else:
-            diff = np.sum(np.absolute(self.agent_to_eval.weights - self.prev_weights))
-            self.prev_weights = self.agent_to_eval.weights
+            diff = np.sum(np.absolute(self.agent_to_eval.parent.weights - self.prev_weights))
+            self.prev_weights = self.agent_to_eval.parent.weights
             return [diff]
 
     def eval(self, n=10, rounds_per_game=25):
@@ -82,24 +82,48 @@ class SpadesEvaluation(SpadesEnv):
         csv_writer.writerow([row_label] + self.eval(n, rounds_per_game))
 
 if __name__ == "__main__":
-    from gym_spades.envs.agents import fa_agent, qfa, rule_based_0
+    from gym_spades.envs.agents.fa import fa_agent, qfa, q_lambda, q_nstep_lambda #fa_agent, fa_lambda_player, fa_nstep_lambda_player,
 
     import sys, os
+    import concurrent.futures
 
     if len(sys.argv) < 3:
         print('usage: spades_eval_env.py OUTPUT_CSV_NAME [PATH_TO_AGENT_FOLDER]+')
         exit()
 
-    with open(sys.argv[1], 'a+') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
+    def eval_agent(path):
+        s = SpadesEvaluation()
+        #print(os.listdir(path))
+        out = []
+        file_list = os.listdir(path)
+        files = sorted(file_list, key=lambda x:x[-2:])
+        for filename in files:
+            #print(filename)
+            with open(os.path.join(path, filename), 'rb') as f:
+                agent = pickle.load(f)
+            s.load_agent(agent)
+            out.append([filename] + s.eval(10, 10))
+        return out
 
-        for i in range(2, len(sys.argv)):
-            s = SpadesEvaluation()
-            for filename in os.listdir(sys.argv[i]):
-                if int(filename.split('-')[2]) < 5000:
-                    continue
-                with open(os.path.join(sys.argv[i], filename), 'rb') as f:
-                    agent = pickle.load(f)
-                s.load_agent(agent)
-                s.eval_to_csv(writer, filename)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        names = [sys.argv[i] for i in range(2, len(sys.argv))]
+        future_to_output = {executor.submit(eval_agent, path): path for path in names}
+        for future in concurrent.futures.as_completed(future_to_output):
+            agent_name = future_to_output[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                print('%r generated an exception: %s' % (agent_name, exc))
+                print(exc)
+            else:
+                with open(sys.argv[1], 'a+') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(['agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
+                    for row in data:
+                        writer.writerow(row)
+
+                # for filename in os.listdir(sys.argv[i]):
+                    # with open(os.path.join(sys.argv[i], filename), 'rb') as f:
+                    #     agent = pickle.load(f)
+                    # s.load_agent(agent)
+                    # s.eval_to_csv(writer, filename)
