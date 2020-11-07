@@ -9,7 +9,7 @@ import random
 
 class fa_lambda_player(fa_player):
 
-    def __init__(self, parent)
+    def __init__(self, parent):
         super().__init__(parent)
         self.eligibility = np.zeros((self.get_feature_space()))
 

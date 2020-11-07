@@ -8,7 +8,7 @@ class SpadesEnv():
     def __init__(self, players):
 
         self.players = players
-        self.results = [[] for i in range(4)]
+        # self.results = [[] for i in range(4)]
 
     def _episode(self):
         self.game.reset()
@@ -21,8 +21,8 @@ class SpadesEnv():
 
         self.game.end_game()
 
-        for p in self.players:
-            self.results[p.index].append(p.result())
+        # for p in self.players:
+        #     self.results[p.index].append(p.result())
 
     def _reset(self):
         self.game = spades(self.players)
@@ -37,14 +37,24 @@ class SpadesEnv():
 
     def save(self, name=0):
         for i in range(4):
-            f = open('tuned_params/'+ self.players[i].name + '-'+str(i)+'-'+str(name), 'wb')
+            f = open('training_output/'+ self.players[i].name + '-'+str(i)+'-'+str(name), 'wb')
             pickle.dump(self.players[i], f)
             f.close()
             self.players[i].total_rewards = 0
 
 if __name__=="__main__":
-    from gym_spades.envs.agents import rule_based_0
-    from gym_spades.envs.agents.fa import fa_agent, qfa, q_lambda, q_nstep_lambda
+    from gym_spades.envs.agents import rule_based_0, agent
+    from gym_spades.envs.agents.fa import fa_agent, qfa, q_lambda, q_nstep_lambda, td_fa
+
+    # eval as we go
+    from gym_spades.envs import SpadesEvaluation
+    import concurrent.futures
+    import sys
+    import csv
+
+    def eval_agent(s_eval, agent):
+        s_eval.load_agent(agent.create_player())
+        return s_eval.eval(10, 10)
 
     # load in the agents
     # names = ['qfa/qfa0-1', 'qfa/qfa1-1', 'qfa/qfa2-1', 'qfa/qfa3-1']
@@ -53,20 +63,149 @@ if __name__=="__main__":
     #     with open(n, 'rb') as f:
     #         agent = pickle.load(f)
     #         agents.append(agent)
+
+    # I would really love to change these, but it seems the model diverges :(
     epsilon = 0.1
     alpha = 0.1
     gamma = 0.01
     lambda_v = 0.4
 
-    q = qfa(epsilon, alpha, gamma)
-    q_lambda = q_lambda(epsilon, alpha, gamma, lambda_v)
-    q_nstep_lambda = q_nstep_lambda(epsilon, alpha, gamma, lambda_v)
-    heur = rule_based_0()
+    experiments = [
+        # playing against other agents
+        [
+            [qfa(epsilon, alpha, gamma), 1],
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [td_fa(epsilon, alpha, gamma), 1]
+        ],
+        # complete self-play
+        [
+            [qfa(epsilon, alpha, gamma), 4]
+        ],
+        [
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 4]
+        ],
+        [
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 4]
+        ],
+        [
+            [td_fa(epsilon, alpha, gamma), 4]
+        ],
+        # playing with heurisitics
+        # qfa
+        [
+            [qfa(epsilon, alpha, gamma), 1],
+            [agent(), 3]
+        ],
+        [
+            [qfa(epsilon, alpha, gamma), 2],
+            [agent(), 2]
+        ],
+        [
+            [qfa(epsilon, alpha, gamma), 1],
+            [rule_based_0(), 3]
+        ],
+        [
+            [qfa(epsilon, alpha, gamma), 2],
+            [rule_based_0(), 2]
+        ],
+        # qfa_lambda
+        [
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [agent(), 3]
+        ],
+        [
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 2],
+            [agent(), 2]
+        ],
+        [
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [rule_based_0(), 3]
+        ],
+        [
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 2],
+            [rule_based_0(), 2]
+        ],
+        # qfa_nstep_lambda
+        [
+            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [agent(), 3]
+        ],
+        [
+            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
+            [agent(), 2]
+        ],
+        [
+            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [rule_based_0(), 3]
+        ],
+        [
+            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
+            [rule_based_0(), 2]
+        ],
+        # td_fa
+        [
+            [td_fa(epsilon, alpha, gamma, lambda_v), 1],
+            [agent(), 3]
+        ],
+        [
+            [td_fa(epsilon, alpha, gamma, lambda_v), 2],
+            [agent(), 2]
+        ],
+        [
+            [td_fa(epsilon, alpha, gamma, lambda_v), 1],
+            [rule_based_0(), 3]
+        ],
+        [
+            [td_fa(epsilon, alpha, gamma, lambda_v), 2],
+            [rule_based_0(), 2]
+        ],
+    ]
 
-    agents = [q.create_player(), q_lambda.create_player(), q_nstep_lambda.create_player(), heur]
-    s = SpadesEnv(agents)
+    # 21 total experiments
+    exp_num = sys.argv[1]
 
-    for i in range(0, 100):
-        s.run(100)
-        s.save(i)
+    # q = qfa(epsilon, alpha, gamma)
+    # q_lambda = q_lambda(epsilon, alpha, gamma, lambda_v)
+    # q_nstep_lambda = q_nstep_lambda(epsilon, alpha, gamma, lambda_v)
+    # agents = [q, q_lambda, q_nstep_lambda]
+    # agents = [q_lambda]
+    # players = [q_lambda.create_player(), rule_based_0(), rule_based_0(), rule_based_0()]
+    agents_and_num = experiments[exp_num]
+    players = [ a[0] for n in a_n for a_n in agents_and_num ]
+    print(players)
+
+    s = SpadesEnv(players)
+
+    eval_envs = [SpadesEvaluation()]
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        with open(sys.argv[2], 'a+') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['num_games', 'agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
+            num_games_played = 0
+            num_games_per_round = 10
+            for i in range(0, 1000):
+                # log scale reporting
+                if i % num_games_per_round == 0:
+                    num_games_per_round *= 10
+                s.run(num_games_per_round)
+                s.save(i)
+
+                num_games_played += num_games_per_round
+                # evaluate each agent on seperate threads
+                future_to_output = {
+                    executor.submit(eval_agent, eval_envs[i], agents[i]): agents[i].name for i in range(len(agents))
+                }
+                for future in concurrent.futures.as_completed(future_to_output):
+                    agent_name = future_to_output[future]
+                    try:
+                        data = future.result()
+                    except Exception as exc:
+                        print('%r generated an exception: %s' % (agent_name, exc))
+                        print(exc)
+                    else:
+                        writer.writerow([num_games_played, agent_name] + data)
+
+
 

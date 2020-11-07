@@ -10,6 +10,9 @@ class rule_based_0(player):
         super().__init__()
         self.name = 'heuristic'
 
+    def create_player(self):
+        return self
+
     # no choice for bidding - sorry!
     def _play(self, game):
 
