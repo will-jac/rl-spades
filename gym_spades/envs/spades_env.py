@@ -5,8 +5,8 @@ from datetime import datetime
 
 class SpadesEnv():
 
-    def __init__(self, players):
-
+    def __init__(self, players, output_path):
+        self.output_path = output_path
         self.players = players
         # self.results = [[] for i in range(4)]
 
@@ -37,7 +37,7 @@ class SpadesEnv():
 
     def save(self, name=0):
         for i in range(4):
-            f = open('training_output/'+ self.players[i].name + '-'+str(i)+'-'+str(name), 'wb')
+            f = open(self.output_path + '/' + self.players[i].name + '-'+str(i)+'-'+str(name), 'wb')
             pickle.dump(self.players[i], f)
             f.close()
             self.players[i].total_rewards = 0
@@ -128,42 +128,43 @@ if __name__=="__main__":
         ],
         # qfa_nstep_lambda
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
             [agent(), 3]
         ],
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
             [agent(), 2]
         ],
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
             [rule_based_0(), 3]
         ],
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
             [rule_based_0(), 2]
         ],
         # td_fa
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 1],
+            [td_fa(epsilon, alpha, gamma), 1],
             [agent(), 3]
         ],
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 2],
+            [td_fa(epsilon, alpha, gamma), 2],
             [agent(), 2]
         ],
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 1],
+            [td_fa(epsilon, alpha, gamma), 1],
             [rule_based_0(), 3]
         ],
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 2],
+            [td_fa(epsilon, alpha, gamma), 2],
             [rule_based_0(), 2]
         ],
     ]
 
     # 21 total experiments
-    exp_num = sys.argv[1]
+    exp_num = int(sys.argv[1])
+    output_path = sys.argv[2]
 
     # q = qfa(epsilon, alpha, gamma)
     # q_lambda = q_lambda(epsilon, alpha, gamma, lambda_v)
@@ -172,15 +173,15 @@ if __name__=="__main__":
     # agents = [q_lambda]
     # players = [q_lambda.create_player(), rule_based_0(), rule_based_0(), rule_based_0()]
     agents_and_num = experiments[exp_num]
-    players = [ a[0] for n in a_n for a_n in agents_and_num ]
-    print(players)
+    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1]) ]
+    #print(players)
 
-    s = SpadesEnv(players)
+    s = SpadesEnv(players, output_path)
 
     eval_envs = [SpadesEvaluation()]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        with open(sys.argv[2], 'a+') as csvfile:
+        with open(output_path + '/' + sys.argv[3], 'a+') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['num_games', 'agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
             num_games_played = 0

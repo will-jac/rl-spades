@@ -5,7 +5,7 @@ from gym_spades.envs.spades import cards, player, spades
 class human(player):
     suits = ['S', 'H', 'C', 'D']
     # humans have no choice for bidding - sorry!
-    def _play(self, game:
+    def _play(self, game):
         print("The round so far:\t", [cards.card_str(c) for c in game.round_so_far])
         print("Your hand:\t", [cards.card_str(c) for c in self.hand])
         while True:
