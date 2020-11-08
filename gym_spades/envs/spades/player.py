@@ -68,7 +68,7 @@ class player:
         return c
 
     def _play(self, game):
-        print('in player _play')
+        #print('in player _play')
         if game is None:
             return 0
 
