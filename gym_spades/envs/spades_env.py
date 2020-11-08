@@ -5,8 +5,8 @@ from datetime import datetime
 
 class SpadesEnv():
 
-    def __init__(self, players):
-
+    def __init__(self, players, output_path):
+        self.output_path = output_path
         self.players = players
         # self.results = [[] for i in range(4)]
 
@@ -37,7 +37,7 @@ class SpadesEnv():
 
     def save(self, name=0):
         for i in range(4):
-            f = open('training_output/'+ self.players[i].name + '-'+str(i)+'-'+str(name), 'wb')
+            f = open(self.output_path + '/' + self.players[i].name + '-'+str(i)+'-'+str(name), 'wb')
             pickle.dump(self.players[i], f)
             f.close()
             self.players[i].total_rewards = 0
@@ -164,6 +164,7 @@ if __name__=="__main__":
 
     # 21 total experiments
     exp_num = int(sys.argv[1])
+    output_path = sys.argv[2]
 
     # q = qfa(epsilon, alpha, gamma)
     # q_lambda = q_lambda(epsilon, alpha, gamma, lambda_v)
@@ -179,12 +180,12 @@ if __name__=="__main__":
     players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1])]
     print(players)
 
-    s = SpadesEnv(players)
+    s = SpadesEnv(players, output_path)
 
     eval_envs = [SpadesEvaluation()]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        with open(sys.argv[2], 'a+') as csvfile:
+        with open(output_path + '/' + sys.argv[3], 'a+') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['num_games', 'agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
             num_games_played = 0
