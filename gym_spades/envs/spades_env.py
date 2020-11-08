@@ -183,7 +183,7 @@ if __name__=="__main__":
 
     s = SpadesEnv(players, output_path)
 
-    eval_envs = [SpadesEvaluation(output_path)]
+    eval_envs = [SpadesEvaluation(output_path) for i in range(len(agents))]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         with open(output_path + '/' + sys.argv[3], 'a+') as csvfile:
