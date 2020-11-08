@@ -16,9 +16,6 @@ class agent_player(player):
         super().__init__()
         self.parent = parent
 
-    def _play(self, game: spades) -> 'cards':
-        self.parent._play(game)
-
     def set_reward(self, winning_player):
         # called by game after each trick
 

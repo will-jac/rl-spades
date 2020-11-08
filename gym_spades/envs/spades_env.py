@@ -172,6 +172,7 @@ if __name__=="__main__":
     # agents = [q, q_lambda, q_nstep_lambda]
     # agents = [q_lambda]
     # players = [q_lambda.create_player(), rule_based_0(), rule_based_0(), rule_based_0()]
+
     agents_and_num = experiments[exp_num]
     agents = []
     for a_n in agents_and_num:
@@ -182,7 +183,7 @@ if __name__=="__main__":
 
     s = SpadesEnv(players, output_path)
 
-    eval_envs = [SpadesEvaluation()]
+    eval_envs = [SpadesEvaluation(output_path)]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         with open(output_path + '/' + sys.argv[3], 'a+') as csvfile:
