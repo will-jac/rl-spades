@@ -99,7 +99,7 @@ if __name__=="__main__":
         ],
         [
             [qfa(epsilon, alpha, gamma), 2, True],
-            [agent(), 2, False]]
+            [agent(), 2, False]
         ],
         [
             [qfa(epsilon, alpha, gamma), 1, True],
