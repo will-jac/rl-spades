@@ -13,7 +13,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 
 class SpadesEvaluation(SpadesEnv):
 
-    def __init__(self):
+    def __init__(self, output_path):
         self.prev_weights = None
 
     def load_agent(self, agent_to_eval):
