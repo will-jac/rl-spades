@@ -7,8 +7,6 @@ from typing import Any, List
 # 'normal' tabular based agent
 class agent(player):
 
-    def _play(self, state):
-        ...
 
     def create_player(self):
         return agent_player(self)
@@ -18,9 +16,6 @@ class agent_player(player):
     def __init__(self, parent: agent):
         super().__init__()
         self.parent = parent
-
-    def _play(self, game: spades) -> 'cards':
-        self.parent._play(game)
 
     def set_reward(self, winning_player):
         # called by game after each trick

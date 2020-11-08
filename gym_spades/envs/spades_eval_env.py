@@ -13,8 +13,9 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 
 class SpadesEvaluation(SpadesEnv):
 
-    def __init__(self):
+    def __init__(self, output_path):
         self.prev_weights = None
+        self.output_path = output_path
 
     def load_agent(self, agent_to_eval):
         agent_to_eval.bid_random = False
@@ -28,7 +29,7 @@ class SpadesEvaluation(SpadesEnv):
         agent1 = copy.deepcopy(self.agent_to_eval)
         agent2 = copy.deepcopy(self.agent_to_eval)
         a = [agent1, comparison_agents[0], agent2, comparison_agents[1]]
-        super().__init__(a)
+        super().__init__(a, self.output_path)
 
     def num_wins(self, num_rounds):
         n = 0
