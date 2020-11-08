@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from gym_spades.envs.spades import cards, player, spades
 from gym import error, spaces, utils
 
@@ -9,7 +7,7 @@ from typing import Any, List
 # 'normal' tabular based agent
 class agent(player):
 
-    def _play(self, state: dict[cards, list[int]]) -> cards:
+    def _play(self, state):
         ...
 
     def create_player(self):
@@ -24,7 +22,7 @@ class agent_player(player):
     def _play(self, game: spades) -> 'cards':
         self.parent._play(game)
 
-    def set_reward(self, winning_player: int):
+    def set_reward(self, winning_player):
         # called by game after each trick
 
         if winning_player in [self.index, self.partner_index]:
@@ -65,12 +63,12 @@ class agent_player(player):
 
         self.rewards.append(self.reward)
 
-    def _discrete(self, result: int, size: int) -> List[int]:
+    def _discrete(self, result, size):
         ret = [0]*size
         ret[result] = 1
         return ret
 
-    def _get_round_type(self, game: spades):
+    def _get_round_type(self, game):
         nil = []
         for i, b in enumerate(game.bids):
             if b == 0:
@@ -104,7 +102,7 @@ class agent_player(player):
         else:
             return 4
 
-    def _partner_is_winning(self, game: spades) -> int:
+    def _partner_is_winning(self, game):
         if game.winning == (self.index + 2) % 4:
             return 1
         return 0
@@ -112,7 +110,7 @@ class agent_player(player):
 
 class td_player(agent_player):
 
-    def _play(self, game: spades) -> 'cards':
+    def _play(self, game):
         return 0
 
     # DO NOT USE FOR FUNCTION APPROXIMATION
@@ -180,14 +178,14 @@ class td_player(agent_player):
         print(ret)
         return(ret)
 
-    def _can_win(self, game: spades) -> int:
+    def _can_win(self, game):
         for c in self.legal_cards:
             if cards.suit(c) == game.winning_suit: # either lead or spades
                 if cards.rank(c) > game.winning_rank:
                     return 1
         return 0
 
-    def _have_next_highest_in_suit(self, game: spades) -> List[int]:
+    def _have_next_highest_in_suit(self, game):
         ret = [0]*4
         for i, discard in enumerate(game.discard_by_suit):
             if len(self.hand_by_suit[i]) == 0:

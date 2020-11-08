@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import random
 import numpy as np
 
@@ -26,7 +24,7 @@ class qfa(fa_agent):
 
     # Q function
     # returns value, action, features
-    def _get_action(self, state: dict[cards, list[int]]) -> (float, cards, list[int]):
+    def _get_action(self, state):
         # terminal condition
         if state == None:
             return 0, None, None
@@ -63,7 +61,7 @@ class qfa(fa_agent):
 
         return max_value, action, features
 
-    def _value(self, features: list[int]) -> float:
+    def _value(self, features):
         print(self.weights)
         return np.dot(self.weights, features)
 
@@ -74,7 +72,7 @@ class qfa(fa_agent):
         self.rewards[episode_number] += reward
         self.lengths[episode_number] += 1
 
-    def result(self) -> list[float]:
+    def result(self):
         return self.weights
 
     def create_player(self):

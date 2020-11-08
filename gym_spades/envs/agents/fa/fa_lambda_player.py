@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from gym_spades.envs.spades import spades, cards, player
 from gym_spades.envs.agents.fa import fa_player
 
@@ -13,7 +11,7 @@ class fa_lambda_player(fa_player):
         super().__init__(parent)
         self.eligibility = np.zeros((self.get_feature_space()))
 
-    def _backup(self, state: dict[cards, list[int]]) -> (float, cards):
+    def _backup(self, state):
         #print(self.hand)
         value, action, features = self.parent._get_action(state)
         #print(value, action, features)

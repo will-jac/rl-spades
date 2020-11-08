@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from gym_spades.envs.spades import spades, cards, player
 from gym_spades.envs.agents import agent, agent_player
 
@@ -8,10 +6,10 @@ import itertools
 import random
 
 class fa_agent(agent):
-    def _play(self, state: dict[cards, list[int]]) -> cards:
+    def _play(self, state):
         ...
 
-    def _get_feature_space(self) -> int:
+    def _get_feature_space(self):
         return fa_player.get_feature_space()
 
     def create_player(self):
@@ -34,12 +32,12 @@ class fa_player(agent_player):
 
         self.name='fa_player'
 
-    def reset(self, index: int, hand: list[cards]):
+    def reset(self, index, hand):
         super().reset(index, hand)
         self.prev_value = None
         self.prev_features = None
 
-    def _play(self, game: spades) -> cards:
+    def _play(self, game):
         # print("playing:",self.index)
         #cards.print_hand(self.hand)
         if game is None:
@@ -57,7 +55,7 @@ class fa_player(agent_player):
 
         return action
 
-    def _backup(self, state: dict[cards, list[int]]) -> (float, cards):
+    def _backup(self, state):
         value, action, features = self.parent._get_action(state)
         td_error = self.reward + self.parent.discount_factor * value - self.prev_value
 
@@ -69,14 +67,14 @@ class fa_player(agent_player):
 
         return value, action, features
 
-    def result(self) -> (list[float], list[float]):
+    def result(self):
         return (self.rewards, self.parent.weights)
 
     @staticmethod
-    def get_feature_space() -> int:
+    def get_feature_space():
         return 66 # size of the vector returned by get_state
 
-    def get_features(self, game: spades, action: cards) -> list[int]:
+    def get_features(self, game, action):
 
         if game is None or action is None:
             return 1
@@ -167,7 +165,7 @@ class fa_player(agent_player):
         # print(ret)
         return(ret)
 
-    def _action_is_winning(self, game: spades, action: cards) -> int:
+    def _action_is_winning(self, game, action):
 
         if game.suit_lead == 5:
             # all first cards played are winning
@@ -192,7 +190,7 @@ class fa_player(agent_player):
                 # someone else has a larger card in suit than action
                 return 0
 
-    def _action_breaks_bid(self, game: spades, action: cards) -> int:
+    def _action_breaks_bid(self, game, action):
         # if we bid nil, don't take a trick!
         if self.bid == 0:
             if self.action_winning:
@@ -206,13 +204,13 @@ class fa_player(agent_player):
                 return 1
         return 0
 
-    def _num_suit_lead_in_round(self, game: spades, action: cards) -> int:
+    def _num_suit_lead_in_round(self, game, action):
         if game.suit_lead == game.NO_LEAD:
             return game.num_suit_lead_in_round[cards.suit(action)]
         else:
             return game.num_suit_lead_in_round[game.suit_lead]
 
-    def _action_is_cutting(self, game: spades, action: cards) -> int:
+    def _action_is_cutting(self, game, action):
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5: # no lead
@@ -221,7 +219,7 @@ class fa_player(agent_player):
             return 0
         return 1
 
-    def _action_is_following(self, game: spades, action: cards) -> int:
+    def _action_is_following(self, game, action):
         from gym_spades.envs.spades import cards
 
         if game.suit_lead == 5: # no lead
@@ -230,7 +228,7 @@ class fa_player(agent_player):
             return 1
         return 0
 
-    def _action_is_boss_in_suit(self, game: spades, action: cards) -> int:
+    def _action_is_boss_in_suit(self, game, action):
         from gym_spades.envs.spades import cards
 
         s = cards.suit(action)

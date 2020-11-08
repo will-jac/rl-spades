@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from gym_spades.envs.spades import spades, cards, player
 from gym_spades.envs.agents.fa import fa_player
 
@@ -14,7 +12,7 @@ class fa_nstep_lambda_player(fa_player):
         self.history = [0]*self.parent.n
         self.history_length = 0
 
-    def _play(self, game: spades) -> cards:
+    def _play(self, game):
         if game is None:
             # do the last n rounds of backup
             for i in range(self.parent.n):
@@ -29,7 +27,7 @@ class fa_nstep_lambda_player(fa_player):
             self.prev_value, action, self.prev_features = self._backup(state)
         return action
 
-    def _backup(self, state: dict[cards, list[int]]) -> (float, cards):
+    def _backup(self, state):
         value, action, features = self.parent._get_action(state)
         if self.reward is None:
             return value, action, features

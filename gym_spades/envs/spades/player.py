@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import random
 import itertools
 from gym_spades.envs.spades import cards
@@ -16,10 +14,10 @@ class player:
         self.bid_random = False
         self.points_hist = []
 
-    def result(self) -> list[int]:
+    def result(self):
         return [self.rewards]
 
-    def reset(self, index: int, hand: list[cards]):
+    def reset(self, index, hand):
         self.index = index
         self.partner_index = (index + 2) % 4
 
@@ -51,7 +49,7 @@ class player:
         self.lost_bid = False
 
     # default action: a random player
-    def play(self, game: 'spades') -> cards:
+    def play(self, game) -> cards:
         c = self._play(game)
         #print("\t", self.index, "  ",cards.card_str(c), "  ", [cards.card_str(c) for c in self.hand])
         try:
@@ -69,14 +67,14 @@ class player:
 
         return c
 
-    def _play(self, game: 'spades') -> cards:
+    def _play(self, game):
         if game is None:
             return 0
 
         cards = self.get_legal_cards(game)
         return random.choice(cards)
 
-    def get_legal_cards(self, game: 'spades') -> list[cards]:
+    def get_legal_cards(self, game):
         # if it's our lead, we can do anything
         if len(game.round_so_far) == 0:
             if not game.spades_broken:
@@ -101,13 +99,13 @@ class player:
 
         return legal_cards
 
-    def set_reward(self, winning_player: int):
+    def set_reward(self, winning_player):
         return
 
     # bid ==> rule-based agent
     # https://arxiv.org/pdf/1912.11323v1.pdf
     # 5.1, Competing Algorithms (RB), and G.1, G.2
-    def bid(self, current_bids: list[int]) -> int:
+    def bid(self, current_bids):
         liability_by_suits = [0]*4
         points = 0
         # determine points in hand

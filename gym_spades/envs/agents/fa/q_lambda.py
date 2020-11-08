@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import random
 import numpy as np
 
@@ -22,7 +20,7 @@ class q_lambda(qfa):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
 
-    def result(self) -> (list[float], list[float]):
+    def result(self):
         return self.weights, self.eligibility
 
     def create_player(self):
