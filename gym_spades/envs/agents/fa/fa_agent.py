@@ -38,7 +38,7 @@ class fa_player(agent_player):
         self.prev_features = None
 
     def _play(self, game):
-        # print("playing:",self.index)
+        print("playing:",self.index)
         #cards.print_hand(self.hand)
         if game is None:
             state = None

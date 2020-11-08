@@ -73,97 +73,97 @@ if __name__=="__main__":
     experiments = [
         # playing against other agents
         [
-            [qfa(epsilon, alpha, gamma), 1],
-            [q_lambda(epsilon, alpha, gamma, lambda_v), 1],
-            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
-            [td_fa(epsilon, alpha, gamma), 1]
+            [qfa(epsilon, alpha, gamma), 1, True],
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
+            [td_fa(epsilon, alpha, gamma), 1, True]
         ],
         # complete self-play
         [
-            [qfa(epsilon, alpha, gamma), 4]
+            [qfa(epsilon, alpha, gamma), 4, True]
         ],
         [
-            [q_lambda(epsilon, alpha, gamma, lambda_v), 4]
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 4, True]
         ],
         [
-            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 4]
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 4, True]
         ],
         [
-            [td_fa(epsilon, alpha, gamma), 4]
+            [td_fa(epsilon, alpha, gamma), 4, True]
         ],
         # playing with heurisitics
         # qfa
         [
-            [qfa(epsilon, alpha, gamma), 1],
-            [agent(), 3]
+            [qfa(epsilon, alpha, gamma), 1, True],
+            [agent(), 3, False]
         ],
         [
-            [qfa(epsilon, alpha, gamma), 2],
-            [agent(), 2]
+            [qfa(epsilon, alpha, gamma), 2, True],
+            [agent(), 2, False]]
         ],
         [
-            [qfa(epsilon, alpha, gamma), 1],
-            [rule_based_0(), 3]
+            [qfa(epsilon, alpha, gamma), 1, True],
+            [rule_based_0(), 3, False]
         ],
         [
-            [qfa(epsilon, alpha, gamma), 2],
-            [rule_based_0(), 2]
+            [qfa(epsilon, alpha, gamma), 2, True],
+            [rule_based_0(), 2, False]
         ],
         # qfa_lambda
         [
-            [q_lambda(epsilon, alpha, gamma, lambda_v), 1],
-            [agent(), 3]
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
+            [agent(), 3, False]
         ],
         [
-            [q_lambda(epsilon, alpha, gamma, lambda_v), 2],
-            [agent(), 2]
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 2, True],
+            [agent(), 2, False]
         ],
         [
-            [q_lambda(epsilon, alpha, gamma, lambda_v), 1],
-            [rule_based_0(), 3]
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
+            [rule_based_0(), 3, False]
         ],
         [
-            [q_lambda(epsilon, alpha, gamma, lambda_v), 2],
-            [rule_based_0(), 2]
+            [q_lambda(epsilon, alpha, gamma, lambda_v), 2, True],
+            [rule_based_0(), 2, False]
         ],
         # qfa_nstep_lambda
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
-            [agent(), 3]
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
+            [agent(), 3, False]
         ],
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
-            [agent(), 2]
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2, True],
+            [agent(), 2, False]
         ],
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1],
-            [rule_based_0(), 3]
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
+            [rule_based_0(), 3, False]
         ],
         [
-            [qfa_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2],
-            [rule_based_0(), 2]
+            [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 2, True],
+            [rule_based_0(), 2, False]
         ],
         # td_fa
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 1],
-            [agent(), 3]
+            [td_fa(epsilon, alpha, gamma), 1, True],
+            [agent(), 3, False]
         ],
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 2],
-            [agent(), 2]
+            [td_fa(epsilon, alpha, gamma), 2, True],
+            [agent(), 2, False]
         ],
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 1],
-            [rule_based_0(), 3]
+            [td_fa(epsilon, alpha, gamma), 1, True],
+            [rule_based_0(), 3, False]
         ],
         [
-            [td_fa(epsilon, alpha, gamma, lambda_v), 2],
-            [rule_based_0(), 2]
+            [td_fa(epsilon, alpha, gamma), 2, True],
+            [rule_based_0(), 2, False]
         ],
     ]
 
     # 21 total experiments
-    exp_num = sys.argv[1]
+    exp_num = int(sys.argv[1])
 
     # q = qfa(epsilon, alpha, gamma)
     # q_lambda = q_lambda(epsilon, alpha, gamma, lambda_v)
@@ -172,7 +172,11 @@ if __name__=="__main__":
     # agents = [q_lambda]
     # players = [q_lambda.create_player(), rule_based_0(), rule_based_0(), rule_based_0()]
     agents_and_num = experiments[exp_num]
-    players = [ a[0] for n in a_n for a_n in agents_and_num ]
+    agents = []
+    for a_n in agents_and_num:
+        if a_n[2]:
+            agents.append(a_n[0])
+    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1])]
     print(players)
 
     s = SpadesEnv(players)
