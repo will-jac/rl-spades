@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 from gym_spades.envs.spades import cards, spades
-from gym_spades.envs.agents.fa import fa_agent
+from gym_spades.envs.agents.fa import fa_agent, fa_player
 
 # td (sarsa) learning agent with function approximation
 
@@ -22,19 +22,27 @@ class td_fa(fa_agent):
         self.prev_features = None
         self.num_tricks_played = 0
 
+    def create_player(self):
+        print('creating td-fa player')
+        p = td_player(self)
+        p.name = self.name
+        return p
 
-
+class td_player(fa_player):
+    
+    def __init__(self, parent):
+        super().__init__(parent)
+        #self.player = fa_player(self)
+        
     def _play(self, game):
-
         #if first trick in hand
-        if self.num_tricks_played == 0:
+        if self.parent.num_tricks_played == 0:
 
             #choose action from current policy
             #TODO: make this an epsilon greedy policy not a greedy one
             poss_actions = self.get_legal_cards(game)
-            max_val = np.dot(self.weights, self.get_features(game, poss_actions[0]))
+            max_val = np.dot(self.parent.weights, self.get_features(game, poss_actions[0]))
             all_max_actions = []
-            print(all_max_actions)
             temp = 0
 
 #            print("--------------------------------------------------")
@@ -48,14 +56,14 @@ class td_fa(fa_agent):
 #
 #
 #            print("--------------------------------------------------")
-#            print("This is trick number ", self.num_tricks_played+1, " there are ", len(poss_actions), "legal cards")
+#            print("This is trick number ", self.parent.num_tricks_played+1, " there are ", len(poss_actions), "legal cards")
 #            print("HAND: ", [cards.card_str(c) for c in self.hand])
 #
 #            print("--------------------------------------------------")
 #            print("The initial max value is ", max_val)
 
             for i in range(0, len(poss_actions)):
-                temp = np.dot(self.weights, self.get_features(game, poss_actions[i]))
+                temp = np.dot(self.parent.weights, self.get_features(game, poss_actions[i]))
 #                print("card ", i, " has value ", temp)
                 if temp == max_val:
 #                    print("card ", i, " was added to all max actions")
@@ -64,56 +72,56 @@ class td_fa(fa_agent):
 #                    print("card ", i, " was greater than previous max, reset all max actions")
                     all_max_actions = [poss_actions[i]]
                     max_val = temp
-#                print(all_max_actions)
+#                print([cards.card_str(c) for c in all_max_actions])
 
-#            print("this is what we have to choose from ", all_max_actions)
+#            print("this is what we have to choose from ", [cards.card_str(c) for c in all_max_actions])
             a = random.choice(all_max_actions)
 
 
             #save previous features
-            self.prev_features = self.get_features(game, a)
-            self.num_tricks_played = self.num_tricks_played+1
+            self.parent.prev_features = self.get_features(game, a)
+            self.parent.num_tricks_played = self.parent.num_tricks_played+1
 
             #take action a
             return a
 
         else:
             #find reward for previous action
-            r = self.rewards[len(self.rewards)-1]
+            r = self.rewards[len(self.rewards)-1] #TODO FIX THIS
 
             #is this the terminal state?
-            if self.num_tricks_played == 13:
+            if self.parent.num_tricks_played == 13:
 #                print("play was called once more after terminal state was reached")
 
                 #Update weights
-                temp = r - np.dot(self.weights, self.prev_features)
-                temp = self.learning_rate*temp
-                self.weights = self.weights + (temp*self.prev_features)
+                temp = r - np.dot(self.parent.weights, self.parent.prev_features)
+                temp = self.parent.learning_rate*temp
+                self.parent.weights = self.parent.weights + (temp*self.parent.prev_features)
 
                 #reset
-                self.num_tricks_played = 0
-                self.prev_features = None
+                self.parent.num_tricks_played = 0
+                self.parent.prev_features = None
                 return None
 
             else:
                 #find reward for previous action
-                r = self.rewards[len(self.rewards)-1]
+                r = self.rewards[len(self.rewards)-1] #TODO FIX HIS
 
                 #choose action from current policy
                 #TODO: make this an epsilon greedy policy not a greedy one
                 poss_actions = self.get_legal_cards(game)
-                max_val = np.dot(self.weights, self.get_features(game, poss_actions[0]))
+                max_val = np.dot(self.parent.weights, self.get_features(game, poss_actions[0]))
                 all_max_actions = []
                 temp = 0
 
 #                print("--------------------------------------------------")
-#                print("This is trick number ", self.num_tricks_played+1, " there are ", len(poss_actions), "legal cards")
+#                print("This is trick number ", self.parent.num_tricks_played+1, " there are ", len(poss_actions), "legal cards")
 #                print("HAND: ", [cards.card_str(c) for c in self.hand])
 #                print("--------------------------------------------------")
 #                print("The initial max value is ", max_val)
 
                 for i in range(0, len(poss_actions)):
-                    temp = np.dot(self.weights, self.get_features(game, poss_actions[i]))
+                    temp = np.dot(self.parent.weights, self.get_features(game, poss_actions[i]))
 #                    print("card ", i, " has value ", temp)
                     if temp == max_val:
 #                        print("card ", i, " was added to all max actions")
@@ -122,32 +130,27 @@ class td_fa(fa_agent):
 #                        print("card ", i, " was greater than previous max, reset all max actions")
                         all_max_actions = [poss_actions[i]]
                         max_val = temp
-#                    print(all_max_actions)
+#                    print([cards.card_str(c) for c in all_max_actions])
 
 
-#                print("this is what we have to choose from ", all_max_actions)
+#                print("this is what we have to choose from ",[cards.card_str(c) for c in all_max_actions])
                 a = random.choice(all_max_actions)
 
 
                 #Update weights
-                temp = np.dot(self.weights, self.get_features(game, a))
-                temp = r + (self.discount_factor*temp)
-                temp = temp - np.dot(self.weights, self.prev_features)
-                temp = self.learning_rate*temp
-                self.weights = self.weights + (temp*self.prev_features)
+                temp = np.dot(self.parent.weights, self.get_features(game, a))
+                temp = r + (self.parent.discount_factor*temp)
+                temp = temp - np.dot(self.parent.weights, self.parent.prev_features)
+                temp = self.parent.learning_rate*temp
+                self.parent.weights = self.parent.weights + (temp*self.parent.prev_features)
 
                 #save previous features
-                self.prev_features = self.get_features(game, a)
-                self.num_tricks_played = self.num_tricks_played+1
+                self.parent.prev_features = self.get_features(game, a)
+                self.parent.num_tricks_played = self.parent.num_tricks_played+1
 
                 #take action a
                 return a
 
 
     def _value(self, features):
-        return np.dot(self.weights, features)
-
-
-
-if __name__ == "__main__":
-    td = td_fa()
+        return np.dot(self.parent.weights, features)
