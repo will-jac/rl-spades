@@ -7,9 +7,6 @@ from typing import Any, List
 # 'normal' tabular based agent
 class agent(player):
 
-    def _play(self, state):
-        ...
-
     def create_player(self):
         return agent_player(self)
 
