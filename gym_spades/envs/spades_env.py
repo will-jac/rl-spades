@@ -76,7 +76,7 @@ if __name__=="__main__":
             [qfa(epsilon, alpha, gamma), 1, True],
             [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
             [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
-            [td_fa(epsilon, alpha, gamma), 1, True]
+            [rule_based_0(), 1, False]#td_fa(epsilon, alpha, gamma), 1, True]
         ],
         # complete self-play
         [
@@ -195,6 +195,8 @@ if __name__=="__main__":
                 # log scale reporting
                 if i % num_games_per_round == 0:
                     num_games_per_round *= 10
+                    for a in agents:
+                        a.increment_exponent()
                 s.run(num_games_per_round)
                 s.save(i)
 

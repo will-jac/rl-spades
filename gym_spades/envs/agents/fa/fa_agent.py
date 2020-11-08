@@ -5,15 +5,25 @@ import numpy as np
 import itertools
 import random
 
+import sys
+
 class fa_agent(agent):
-    def _play(self, state):
-        ...
+
+    def __init__(self):
+        super().__init__()
+        self.exponent = 1
 
     def _get_feature_space(self):
         return fa_player.get_feature_space()
 
     def create_player(self):
         return fa_player(self)
+
+    def set_exponent(self, exponent):
+        self.exponent = exponent
+
+    def increment_exponent(self):
+        self.exponent += 1
 
 # function approximation agent
 class fa_player(agent_player):
@@ -36,6 +46,8 @@ class fa_player(agent_player):
         super().reset(index, hand)
         self.prev_value = None
         self.prev_features = None
+        #print('variables:', self.index, self.parent.learning_rate, self.parent.discount_factor)
+
 
     def _play(self, game):
         #print("playing:",self.index)
@@ -56,15 +68,19 @@ class fa_player(agent_player):
         return action
 
     def _backup(self, state):
+        #print('reward is:' + str(self.reward))
         value, action, features = self.parent._get_action(state)
-        td_error = self.reward + self.parent.discount_factor * value - self.prev_value
-
+        # equation 9.9: w_t+1 = 1_t + alpha(R_t+1 + gamma * w_t (*) x_t+1 - w_t * x_t) * x_t
+        # => TD_error = R_t+1 + gamma * w_t (*) x_t+1 - w_t * x_t
+        # => R_t+1 + gamma * (weights * new_features) - (weights * old_features)
+        td_error = self.reward + self.parent.discount_factor ** self.parent.exponent * value - self.parent._value(self.prev_features)
         #print(self.index, "backup",  self.parent.learning_rate, td_target, self.prev_features)
         # back up our weights
         # perform stochastic gradient descent (features, q_next)
         # pg 205
         self.parent.weights += self.parent.learning_rate * td_error * self.prev_features
-
+        #print(self.index, self.reward, value, self.prev_value, td_error, self.prev_features, file=sys.stderr)
+        #print(self.parent.weights)
         return value, action, features
 
     def result(self):

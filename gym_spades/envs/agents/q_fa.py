@@ -62,7 +62,7 @@ class qfa(fa_agent):
         return max_value, action, features
 
     def _value(self, features):
-        print(self.weights)
+        #print(self.weights)
         return np.dot(self.weights, features)
 
     def _log(self, episode_number, reward):

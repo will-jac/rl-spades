@@ -76,7 +76,7 @@ class qfa(fa_agent):
         return self.weights
 
     def create_player(self):
-        print('creating qfa player')
+        #print('creating qfa player')
         p = fa_player(self)
         p.name = 'q_fa'
         return p
