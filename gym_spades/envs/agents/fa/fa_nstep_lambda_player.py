@@ -9,7 +9,8 @@ class fa_nstep_lambda_player(fa_player):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.history = []
+        self.G = None
+        self.i = 0
 
     def _play(self, game):
         if game is None:
@@ -28,28 +29,27 @@ class fa_nstep_lambda_player(fa_player):
 
     def _backup(self, state):
         value, action, features = self.parent._get_action(state)
-        if self.reward is None:
+        if self.G is None or self.reward is None:
+            # first round
+            self.G = value
+            self.i = 0
+            #self.history.append(0, value, features)
             return value, action, features
 
         #print(self.reward, self.parent.discount_factor, value, self.prev_value)
         td_error = self.reward + self.parent.discount_factor * value - self.prev_value
         # pg 297
-        self.history.append((td_error, value, features))
 
-        if len(self.history) == self.parent.n:
-            #print("backing up")
-            _, first_v, f, = self.history[0]
-            G = first_v
-            for i, (td_err, _, _) in enumerate(self.history):
-                G += (self.parent.lambda_v * self.parent.learning_rate)**(i) * td_err
+        if self.i + 1 == self.parent.n:
+            print("backing up")
             # backup from that position
             #print(self.history)
-            _, v, f = self.history[11]
-            #print((G-v), f)
-            self.parent.weights += self.parent.discount_factor * (G - v) * f
+            self.parent.weights += self.parent.discount_factor * (self.G - self.prev_value) * self.prev_features
             # reset history
-            self.history = []
-        #else:
-        #    print(len(self.history))
+            self.G = None
+            self.i = 0
+        else:
+            self.G += (self.parent.lambda_v * self.parent.learning_rate)**(self.i) * td_error
+            self.i += 1
 
         return value, action, features
