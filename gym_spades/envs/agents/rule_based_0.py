@@ -33,6 +33,8 @@ class rule_based_0(player):
         if len(legal_cards) == 0:
             print("NO LEGAL CARDS!!")
             print("CARDS ARE:", self.hand)
+            print("index:", self.index)
+            print("hist:", game.round_so_far, game.round_counter)
         if len(legal_cards) == 1:
             card = legal_cards[0]
             return card
