@@ -9,6 +9,8 @@ class agent(player):
 
     def create_player(self):
         return agent_player(self)
+    def increment_exponent(self):
+        return
 
 class agent_player(player):
 

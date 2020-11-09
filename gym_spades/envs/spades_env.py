@@ -175,11 +175,14 @@ if __name__=="__main__":
 
     agents_and_num = experiments[exp_num]
     agents = []
+    players = []
     for a_n in agents_and_num:
+        for n in range(a_n[1]):
+            players.append(a_n[0].create_player())
+            a_n[0].increment_exponent
         if a_n[2]:
             agents.append(a_n[0])
-    # players = [qfa, qfa, rand, rand]
-    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1]) ]
+    #players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1]) ]
     print(players)
 
     s = SpadesEnv(players, output_path)
@@ -193,7 +196,7 @@ if __name__=="__main__":
             num_games_played = 0
             num_games_per_round = 10
 
-            for i in range(1, 201):
+            for i in range(1, 150):
                 # log scale reporting
                 if i % num_games_per_round == 0:
                     num_games_per_round *= 10
