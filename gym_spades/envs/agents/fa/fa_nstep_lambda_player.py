@@ -9,8 +9,7 @@ class fa_nstep_lambda_player(fa_player):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.history = [0]*self.parent.n
-        self.history_length = 0
+        self.history = []
 
     def _play(self, game):
         if game is None:
@@ -38,11 +37,19 @@ class fa_nstep_lambda_player(fa_player):
         self.history.append((td_error, value, features))
 
         if len(self.history) == self.parent.n:
-            G = value
-            for i, td_err, _, _ in enumerate(self.history):
-                G += (self.parent._v * self.parent.learning_rate)**(i) * td_err
+            #print("backing up")
+            _, first_v, f, = self.history[0]
+            G = first_v
+            for i, (td_err, _, _) in enumerate(self.history):
+                G += (self.parent.lambda_v * self.parent.learning_rate)**(i) * td_err
             # backup from that position
-            _, v, f = self.history.pop(0)
+            #print(self.history)
+            _, v, f = self.history[11]
+            #print((G-v), f)
             self.parent.weights += self.parent.discount_factor * (G - v) * f
+            # reset history
+            self.history = []
+        #else:
+        #    print(len(self.history))
 
         return value, action, features
