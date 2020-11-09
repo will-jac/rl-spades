@@ -48,7 +48,7 @@ class td_player(fa_player):
 
         #if first trick in hand
         if self.first_play:
-            print("first")
+            #print("first")
             self.first_play = False
             #choose action from current policy
             #TODO: make this an epsilon greedy policy not a greedy one
