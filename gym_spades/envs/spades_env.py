@@ -191,11 +191,11 @@ if __name__=="__main__":
             writer = csv.writer(csvfile)
             writer.writerow(['num_games', 'agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
             num_games_played = 0
-            num_games_per_round = 10
+            num_games_per_round = 1
             for i in range(1, 200):
                 # log scale reporting
                 if i % num_games_per_round == 0:
-                    num_games_per_round *= 10
+                    # num_games_per_round *= 10
                     for a in agents:
                         a.increment_exponent()
                 s.run(num_games_per_round)
