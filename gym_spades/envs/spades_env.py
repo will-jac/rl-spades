@@ -71,7 +71,7 @@ if __name__=="__main__":
     lambda_v = 0.4
 
     experiments = [
-        # playing against other agents
+        # 0 playing against other agents
         [
             [qfa(epsilon, alpha, gamma), 1, True],
             [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],

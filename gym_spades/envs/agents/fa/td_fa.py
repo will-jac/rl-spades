@@ -161,7 +161,7 @@ class td_player(fa_player):
                 temp = np.dot(self.parent.weights, self.get_features(game, a))
                 temp = r + (self.parent.discount_factor*temp)
                 temp = temp - np.dot(self.parent.weights, self.parent.prev_features)
-                temp = self.parent.learning_rate*temp
+                temp = self.parent.learning_rate ** self.parent.exponent * temp
                 self.parent.weights = self.parent.weights + (temp*self.parent.prev_features)
 
                 #save previous features
