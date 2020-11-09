@@ -66,7 +66,7 @@ if __name__=="__main__":
 
     # I would really love to change these, but it seems the model diverges :(
     epsilon = 0.1
-    alpha = 0.4
+    alpha = 0.1
     gamma = 0.01
     lambda_v = 0.4
 
@@ -76,7 +76,7 @@ if __name__=="__main__":
             [qfa(epsilon, alpha, gamma), 1, True],
             [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
             [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
-            [td_fa(epsilon, alpha, gamma), 1, True]#td_fa(epsilon, alpha, gamma), 1, True]
+            [td_fa(epsilon, alpha, gamma), 1, True]
         ],
         # complete self-play
         [
@@ -178,7 +178,8 @@ if __name__=="__main__":
     for a_n in agents_and_num:
         if a_n[2]:
             agents.append(a_n[0])
-    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1])]
+    # players = [qfa, qfa, rand, rand]
+    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1]) ]
     print(players)
 
     s = SpadesEnv(players, output_path)
@@ -191,10 +192,12 @@ if __name__=="__main__":
             writer.writerow(['num_games', 'agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
             num_games_played = 0
             num_games_per_round = 10
+
             for i in range(1, 201):
                 # log scale reporting
                 if i % num_games_per_round == 0:
                     num_games_per_round *= 10
+                if i % 10 == 0:
                     for a in agents:
                         a.increment_exponent()
                 s.run(num_games_per_round)

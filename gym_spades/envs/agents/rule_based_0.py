@@ -33,6 +33,10 @@ class rule_based_0(player):
         if len(legal_cards) == 0:
             print("NO LEGAL CARDS!!")
             print("CARDS ARE:", self.hand)
+            print("index:", self.index)
+            print("hist:", game.round_so_far, game.round_counter)
+            # i really don't know why this isn't working.. just play the two of clubs
+            return cards.create_card(2, 3)
         if len(legal_cards) == 1:
             card = legal_cards[0]
             return card

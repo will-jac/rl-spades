@@ -1,4 +1,4 @@
-import random as rand
+import random
 import numpy as np
 
 from gym_spades.envs.spades import cards, spades
@@ -23,7 +23,7 @@ class td_fa(fa_agent):
         self.num_tricks_played = 0
 
     def create_player(self):
-        print('creating td-fa player')
+        #print('creating td-fa player')
         p = td_player(self)
         p.name = self.name
         return p
@@ -40,6 +40,10 @@ class td_player(fa_player):
         self.first_play = True
 
     def _play(self, game):
+
+        if game == None:
+            return None
+
         #if first trick in hand
         if self.first_play:
 
@@ -83,9 +87,9 @@ class td_player(fa_player):
             a = random.choice(all_max_actions)
             
             #epsilon greedy policy
-            r_val = rand.uniform(0,1) #stores a random value between 0 and 1
+            r_val = random.uniform(0,1) #stores a random value between 0 and 1
             
-            if r_val <= epsilon:
+            if r_val <= self.parent.epsilon:
                 a = random.choice(poss_actions)
 
 
@@ -147,9 +151,9 @@ class td_player(fa_player):
                 a = random.choice(all_max_actions)
                 
                 #epsilon greedy policy
-                r_val = rand.uniform(0,1) #stores a random value between 0 and 1
+                r_val = random.uniform(0,1) #stores a random value between 0 and 1
                 
-                if r_val <= epsilon:
+                if r_val <= self.parent.epsilon:
                     a = random.choice(poss_actions)
 
 
