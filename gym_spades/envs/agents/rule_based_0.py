@@ -1,6 +1,8 @@
 import numpy as np
 from gym_spades.envs.spades import player, cards
 
+import sys
+
 # This agent is not a learning agent, just a rules-based algorithm
 # that picks a card based on the cards taht have been played that round and what it can see in its hand
 
@@ -28,6 +30,9 @@ class rule_based_0(player):
         card_ranks = np.ndarray.tolist(np.mod(legal_cards, 13))
 
         #If there is only one card in our hand, there are no decisions to be made
+        if len(legal_cards) == 0:
+            print("NO LEGAL CARDS!!")
+            print("CARDS ARE:", self.hand)
         if len(legal_cards) == 1:
             card = legal_cards[0]
             return card
