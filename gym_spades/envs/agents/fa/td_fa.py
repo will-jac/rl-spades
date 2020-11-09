@@ -34,6 +34,8 @@ class td_player(fa_player):
         super().__init__(parent)
         #self.player = fa_player(self)
         self.first_play = True
+        self.prev_features = None
+        self.num_tricks_played = 0
 
     def reset(self, index, hand):
         super().reset(index, hand)
@@ -46,7 +48,8 @@ class td_player(fa_player):
 
         #if first trick in hand
         if self.first_play:
-
+            print("first")
+            self.first_play = False
             #choose action from current policy
             #TODO: make this an epsilon greedy policy not a greedy one
             poss_actions = self.get_legal_cards(game)
@@ -94,8 +97,8 @@ class td_player(fa_player):
 
 
             #save previous features
-            self.parent.prev_features = self.get_features(game, a)
-            self.parent.num_tricks_played = self.parent.num_tricks_played+1
+            self.prev_features = self.get_features(game, a)
+            self.num_tricks_played = self.num_tricks_played+1
 
             #take action a
             return a
@@ -105,16 +108,17 @@ class td_player(fa_player):
             r = self.reward #s[len(self.rewards)-1] #TODO FIX THIS
 
             #is this the terminal state?
-            if self.parent.num_tricks_played == 13:
+            if self.num_tricks_played == 13:
 #                print("play was called once more after terminal state was reached")
 
                 #Update weights
-                temp = r - np.dot(self.parent.weights, self.parent.prev_features)
+                temp = r - np.dot(self.parent.weights, self.prev_features)
                 temp = self.parent.learning_rate*temp
                 self.parent.weights = self.parent.weights + (temp*self.parent.prev_features)
 
                 #reset
-                self.parent.num_tricks_played = 0
+                #print("reset")
+                self.num_tricks_played = 0
                 self.parent.prev_features = None
                 return None
 
@@ -156,18 +160,17 @@ class td_player(fa_player):
                 if r_val <= self.parent.epsilon:
                     a = random.choice(poss_actions)
 
-
                 #Update weights
                 temp = np.dot(self.parent.weights, self.get_features(game, a))
                 temp = r + (self.parent.discount_factor*temp)
-                temp = temp - np.dot(self.parent.weights, self.parent.prev_features)
+                temp = temp - np.dot(self.parent.weights, self.prev_features)
                 temp = self.parent.learning_rate ** self.parent.exponent * temp
-                self.parent.weights = self.parent.weights + (temp*self.parent.prev_features)
+                self.parent.weights = self.parent.weights + (temp*self.prev_features)
 
                 #save previous features
-                self.parent.prev_features = self.get_features(game, a)
-                self.parent.num_tricks_played = self.parent.num_tricks_played+1
-
+                self.prev_features = self.get_features(game, a)
+                self.num_tricks_played = self.num_tricks_played+1
+                #print("backedup")
                 #take action a
                 return a
 
