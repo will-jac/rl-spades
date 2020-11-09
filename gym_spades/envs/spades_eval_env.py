@@ -69,11 +69,12 @@ class SpadesEvaluation(SpadesEnv):
 
     def eval_convergence(self):
         if self.prev_weights is None:
-            self.prev_weights = self.agent_to_eval.parent.weights
+            self.prev_weights = np.array(self.agent_to_eval.parent.weights)
             return [np.sum(np.absolute(self.prev_weights))]
         else:
-            diff = np.sum(np.absolute(self.agent_to_eval.parent.weights - self.prev_weights))
-            self.prev_weights = self.agent_to_eval.parent.weights
+            w = np.array(self.agent_to_eval.parent.weights)
+            diff = np.sum(np.absolute(w - self.prev_weights))
+            self.prev_weights = w
             return [diff]
 
     def eval(self, n=10, rounds_per_game=25):
