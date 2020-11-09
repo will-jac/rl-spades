@@ -200,7 +200,7 @@ if __name__=="__main__":
                 # log scale reporting
                 if i % num_games_per_round == 0:
                     num_games_per_round *= 10
-                if i % 10 == 0:
+                if i % 50 == 0:
                     for a in agents:
                         a.increment_exponent()
                 s.run(num_games_per_round)
