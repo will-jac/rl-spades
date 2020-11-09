@@ -23,7 +23,7 @@ class fa_lambda_player(fa_player):
         # perform stochastic gradient descent (features, q_next)
         # pg 205
         # section 12.2
-        self.eligibility = self.parent.discount_factor * self.parent.lambda_v * self.eligibility + self.prev_features
+        self.eligibility = self.parent.discount_factor * self.parent.lambda_v ** self.parent.exponent * self.eligibility + self.prev_features
         self.parent.weights = self.parent.weights + self.parent.learning_rate * td_target * self.eligibility
 
         return value, action, features
