@@ -20,6 +20,7 @@ class SpadesEvaluation(SpadesEnv):
     def load_agent(self, agent_to_eval):
         agent_to_eval.bid_random = False
         agent_to_eval.epsilon = 0
+
         self.agent_to_eval = agent_to_eval
 
     def _load_comparison(self, comparison_agents):
@@ -57,7 +58,7 @@ class SpadesEvaluation(SpadesEnv):
         return [reward_per_round_sum / n, points_per_game_sum / n, num_wins, num_wins / (n*rounds_per_game)]
 
     def eval_heuristic(self, n=100, rounds_per_game=50):
-        self._load_comparison([rule_based_0(), rule_based_0()])
+        self._load_comparison([rule_based_0().create_player(), rule_based_0().create_player()])
 
         reward_per_round_sum = points_per_game_sum = num_wins = 0
         for i, rpr, ppg, nw in self._eval(n, rounds_per_game):

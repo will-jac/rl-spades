@@ -1,19 +1,25 @@
 import numpy as np
 from gym_spades.envs.spades import player, cards
+from gym_spades.envs.agents import agent, agent_player
 
 import sys
 
 # This agent is not a learning agent, just a rules-based algorithm
 # that picks a card based on the cards taht have been played that round and what it can see in its hand
 
-class rule_based_0(player):
+class rule_based_0(agent):
 
     def __init__(self):
         super().__init__()
-        self.name = 'heuristic'
 
     def create_player(self):
-        return self
+        return rule_based_player(self)
+
+class rule_based_player(agent_player):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.name = 'heuristic'
 
     # no choice for bidding - sorry!
     def _play(self, game):

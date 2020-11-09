@@ -41,7 +41,7 @@ class td_player(fa_player):
 
     def _play(self, game):
 
-        if game == None:
+        if game is None:
             return None
 
         #if first trick in hand
@@ -85,10 +85,10 @@ class td_player(fa_player):
 
 #            print("this is what we have to choose from ", [cards.card_str(c) for c in all_max_actions])
             a = random.choice(all_max_actions)
-            
+
             #epsilon greedy policy
             r_val = random.uniform(0,1) #stores a random value between 0 and 1
-            
+
             if r_val <= self.parent.epsilon:
                 a = random.choice(poss_actions)
 
@@ -149,10 +149,10 @@ class td_player(fa_player):
 
 #                print("this is what we have to choose from ",[cards.card_str(c) for c in all_max_actions])
                 a = random.choice(all_max_actions)
-                
+
                 #epsilon greedy policy
                 r_val = random.uniform(0,1) #stores a random value between 0 and 1
-                
+
                 if r_val <= self.parent.epsilon:
                     a = random.choice(poss_actions)
 
