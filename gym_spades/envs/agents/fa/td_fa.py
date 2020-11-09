@@ -29,14 +29,19 @@ class td_fa(fa_agent):
         return p
 
 class td_player(fa_player):
-    
+
     def __init__(self, parent):
         super().__init__(parent)
         #self.player = fa_player(self)
-        
+        self.first_play = True
+
+    def reset(self, index, hand):
+        super().reset(index, hand)
+        self.first_play = True
+
     def _play(self, game):
         #if first trick in hand
-        if self.parent.num_tricks_played == 0:
+        if self.first_play:
 
             #choose action from current policy
             #TODO: make this an epsilon greedy policy not a greedy one
@@ -87,7 +92,7 @@ class td_player(fa_player):
 
         else:
             #find reward for previous action
-            r = self.rewards[len(self.rewards)-1] #TODO FIX THIS
+            r = self.reward #s[len(self.rewards)-1] #TODO FIX THIS
 
             #is this the terminal state?
             if self.parent.num_tricks_played == 13:
