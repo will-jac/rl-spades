@@ -1,4 +1,4 @@
-import random
+import random as rand
 import numpy as np
 
 from gym_spades.envs.spades import cards, spades
@@ -81,6 +81,12 @@ class td_player(fa_player):
 
 #            print("this is what we have to choose from ", [cards.card_str(c) for c in all_max_actions])
             a = random.choice(all_max_actions)
+            
+            #epsilon greedy policy
+            r_val = rand.uniform(0,1) #stores a random value between 0 and 1
+            
+            if r_val <= epsilon:
+                a = random.choice(poss_actions)
 
 
             #save previous features
@@ -113,7 +119,6 @@ class td_player(fa_player):
                 r = self.rewards[len(self.rewards)-1] #TODO FIX HIS
 
                 #choose action from current policy
-                #TODO: make this an epsilon greedy policy not a greedy one
                 poss_actions = self.get_legal_cards(game)
                 max_val = np.dot(self.parent.weights, self.get_features(game, poss_actions[0]))
                 all_max_actions = []
@@ -140,6 +145,12 @@ class td_player(fa_player):
 
 #                print("this is what we have to choose from ",[cards.card_str(c) for c in all_max_actions])
                 a = random.choice(all_max_actions)
+                
+                #epsilon greedy policy
+                r_val = rand.uniform(0,1) #stores a random value between 0 and 1
+                
+                if r_val <= epsilon:
+                    a = random.choice(poss_actions)
 
 
                 #Update weights
