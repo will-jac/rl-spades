@@ -40,6 +40,10 @@ class td_player(fa_player):
         self.first_play = True
 
     def _play(self, game):
+
+        if game == None:
+            return None
+
         #if first trick in hand
         if self.first_play:
 

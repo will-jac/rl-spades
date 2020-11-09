@@ -76,7 +76,7 @@ if __name__=="__main__":
             [qfa(epsilon, alpha, gamma), 1, True],
             [q_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
             [q_nstep_lambda(epsilon, alpha, gamma, lambda_v), 1, True],
-            [rule_based_0(), 1, False]#td_fa(epsilon, alpha, gamma), 1, True]
+            [td_fa(epsilon, alpha, gamma), 1, True]
         ],
         # complete self-play
         [
@@ -178,12 +178,13 @@ if __name__=="__main__":
     for a_n in agents_and_num:
         if a_n[2]:
             agents.append(a_n[0])
-    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1])]
+    # players = [qfa, qfa, rand, rand]
+    players = [ a_n[0].create_player() for a_n in agents_and_num for n in range(a_n[1]) ]
     print(players)
 
     s = SpadesEnv(players, output_path)
 
-    eval_envs = [SpadesEvaluation(output_path)]
+    eval_envs = [SpadesEvaluation(output_path) for a in range(len(agents))]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         with open(output_path + '/' + sys.argv[3], 'a+') as csvfile:
@@ -191,7 +192,7 @@ if __name__=="__main__":
             writer.writerow(['num_games', 'agent', 'convergence', 'rand_rpr', 'rand_ppg', 'rand_nwins', 'rand_winp', 'heur_rpr', 'heur_ppg', 'heur_nwins', 'heur_winp'])
             num_games_played = 0
             num_games_per_round = 10
-            for i in range(0, 1000):
+            for i in range(1, 200):
                 # log scale reporting
                 if i % num_games_per_round == 0:
                     num_games_per_round *= 10
